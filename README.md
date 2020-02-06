@@ -1,5 +1,4 @@
-![GFLogo](./res/drawing.svg)
-![GFLogo](./res/drawing2.svg)
+![GFLogo](./logo/logo.svg)
 
 #### De/Serialization
 All resource classes share a set of de/serialization functions. Namely `readFromBuffer`, `readFromFile`, `serializeToBuffer` and `serializeToFile` which are inherited from `GlacierResource`, as well as `serialize(BinaryReader&)`, which can be used to support arbitrary write sinks. Some resource classes may also provide additional serialization methods specific to the resource in question. The texture resource format `TEXD` for example provides `saveToDDSBuffer`, `saveToDDSFile`, `saveToTGAFile` and ` saveToPNGFile`.
