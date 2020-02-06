@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.5)
+
+add_subdirectory(RenderAssetIO)
+add_subdirectory(PatchBuilder)
+add_subdirectory(ParsingCoverage)
