@@ -153,14 +153,21 @@ std::filesystem::path ResourceRepository::runtime_dir = std::filesystem::path();
 		return references_of_type;
 	}
 
-	std::vector<RuntimeId> ResourceRepository::getIdsByType(const char type[4]) const {
-		char le_type[4];
-		for (int i = 0; i < 4; ++i)
-			le_type[i] = type[3 - i];
+	std::vector<RuntimeId> GlacierFormats::ResourceRepository::getIds() const {
+		//TODO: This function is needlessly expensive, store id list in ResouceRepositoryData
+		std::vector<RuntimeId> ids;
+		ids.reserve(header.size());
+		for (const auto& h : header)
+			ids.push_back(h.first);
+		return ids;
+	}
+
+	std::vector<RuntimeId> ResourceRepository::getIdsByType(std::string type) const {
+		std::reverse(type.begin(), type.end());
 
 		std::vector<RuntimeId> ids;
 		for (const auto& h : header) {
-			if (memcmp(h.second->type, le_type, 4) == 0)
+			if (memcmp(h.second->type, type.data(), 4) == 0)
 				ids.push_back(h.first);
 		}
 		return ids;

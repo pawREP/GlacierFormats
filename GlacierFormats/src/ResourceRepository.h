@@ -68,8 +68,6 @@ namespace GlacierFormats {
 		//This class is optimized for fast construction. Most calculations are off-loaded to access routines.
 		//TODO: The class uses some type punning that's techincally UB. This should be fixed once bit_cast is released with C++20.
 	private:
-		
-
 		std::unordered_map<RuntimeId, const ResourceInfo*> info;
 		std::unordered_map<RuntimeId, const ResourceHeader*> header;
 		mutable std::unordered_map<RuntimeId, std::ifstream*> stream;
@@ -93,7 +91,8 @@ namespace GlacierFormats {
 		std::vector<ResourceReference> getResourceReferences(const RuntimeId& id) const;
 		std::vector<ResourceReference> getResourceReferences(const RuntimeId& id, const std::string& type) const;
 
-		std::vector<RuntimeId> getIdsByType(const char type[4]) const;
+		std::vector<RuntimeId> getIds() const;
+		std::vector<RuntimeId> getIdsByType(std::string type) const;
 
 		//Returns the name of the archive file that the resource with the given id is retreived from. 
 		const std::string getSourceStreamName(RuntimeId id) const;
