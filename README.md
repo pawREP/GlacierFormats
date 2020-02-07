@@ -3,7 +3,7 @@
 GlacierFormats is a C++17 library for processing of Glacier 2 Engine resource files. This library is part of a research and reverse-engineering project that aims to provide documentation and tools to facilitate interoperability with the Glacier 2 Engine. 
 
 # Feature overview
-GlacierFormats supports a growing selection of Glacier 2 Engine resource formats. The scope of support varies from format to format depending on the importance of the underlying resources in the Glacier eco system and the complexity of the format. The general goal is to provide at least basic deserialization, serialization functionality for all supported resources. Modification and de novo creation of resources is also supported when ever possible, practical and useful.
+GlacierFormats supports a growing selection of Glacier 2 Engine resource formats. The scope of support varies from format to format depending on the importance of the underlying resources in the Glacier eco system and the complexity of the format. The general goal is to provide at least basic deserialization, serialization functionality for all supported resources. Modification and de novo creation of resources is also supported whenever possible, practical and useful.
 
 Currently supported formats:
 - **PRIM** (Primitive render mesh)
@@ -26,29 +26,35 @@ In addition to the very openly designed, research oriented resource file classes
 Even higher level interfaces are provided to operate on logical collections of resources. `IRenderAsset` is one such interface, it provides transparent access to meshes, skeletons and materials. GLTF and FBX import/export is handled at this level of abstraction. 
 
 ## Resource I/O
-GlacierFormats provides two major interfaces for resource loadinging and storing. The first interface operates on files and buffers, while the other interface operates on `ResourceRepository`. The following paragraphs go over a few of the details.
+GlacierFormats provides two major interfaces for resource loading and storing. The first interface operates on files and buffers, while the other interface operates on `ResourceRepository`.
 
 ### Resource loading from Files and Buffers:
 All resource classes inherit from `GlacierResource` and share a set of de/serialization functions. Namely `readFromBuffer`, `readFromFile`, `serializeToBuffer` and `serializeToFile`. Additionally, each class provides `serialize(BinaryReader&)`, which can support arbitrary serialization sinks via implementations of `IBinaryReaderSink`. Some resource classes may also provide additional serialization methods specific to the resource in question. The texture resource format `TEXD` for example provides `saveToDDSBuffer`, `saveToDDSFile`, `saveToTGAFile` and `saveToPNGFile`.
 ```cpp
-//Loading a PRIM resource from the filesystem
+//File system IO
 RuntimeId prim_runtime_id = 0x00277DE292B8D13F;
 auto path = std::filesystem::path("E:/Glacier/277DE292B8D13F.PRIM")
 std::unique_ptr<PRIM> resource  = GlacierResource<PRIM>::readFromFile(path, prim_runtime_id);
+//...
+resource->serializeToFile(path);
 ``` 
 
 ### Resource loading from `ResourceRepository`
 `ResourceRepository` is a singleton that gets initilized during startup of the library. It provides transparent and unified access to resources inside the heirarchy of archives that ship with Glacier 2 Engine titles. Loading directly from the repository, as opposed to unpacking the repository and loading from individual resource files, has the advantage that all the complexities of version control and archive patches are handled automatically. 
+Another major advantage of using the repository for resource loading is that it can provide additional meta data like dependency relationships between resources. This meta data isn't availble when using unpacked archives. 
+
 ```cpp
 //Loading a PRIM resource from a resource repository
 auto repo = ResourceRepository::instance();
 RuntimeId prim_runtime_id = 0x00277DE292B8D13F;
 std::unique_ptr<PRIM> resource  = repo->getResource<PRIM>(prim_runtime_id);
 ``` 
-Another major advantage of using the repository for resource loading is that it can provide additional meta data like dependency relationships between resources. This meta data isn't availble when using unpacked archives. 
 
 ## Finding Runtime IDs
-All resources in the Glacier 2 Engine are identified and referenced by a unique 56 bit runtime id. These ids are generated at built time by hashing the full resource path with a platform specific extension. The hashing process removed identifying information an can make finding specific resources difficult. Fortunately there is a pertial solution to this issue. Many resources contain strings that can give hints about their use or the use of their child and parent resources. The `GlacierFormatsTools` folder contains a tool that can generate a mapping between material instance names and runtime ids of meshes that use those materials. Similar maps can be generated between other resources and they can simplify the search for specific ids greatly. 
+All resources in the Glacier 2 Engine are identified and referenced by a unique 56 bit runtime id. These ids are generated at built time by hashing the full resource path with a platform specific extension. The hashing process removes identifying information which can make finding specific resources difficult. Fortunately, there is a partial solution to this issue. Many resources contain strings that can give hints about their use or the use of their child and parent resources. The `GlacierFormatsTools` folder contains a tool that can generate a mapping between material instance names and runtime ids of meshes that use those materials. Similar maps can be generated between other resources and they can simplify the search for specific ids greatly. 
+
+## Documentation
+GlacierFormats is currently mainly documented via a collection of small, well documented sample applications that cover most basic use cases like de/serialisation and modification of resources as well as import/export from/to exchange formats. All the samples can be found in `GlacierFormatsSamples`.
 
 ## Building GlacierFormats 
 Windows (with cmake-gui / VS 16 2019):
