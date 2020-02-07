@@ -10,16 +10,14 @@ struct Coverage {
 
 	int good; //Parsed without throwing exception
     int unsupported; //Exception thrown during parsing because of known limitations like unsupported features, compression formats etc.
-    int expected_failure; //Exception thrown during parsing because of known limitations like unsupported features, compression formats etc.
-    int unexpected_failure; //Fatal exception thrown during parsing. This idicates logic errors like bad asserts, out of bound reads etc. 
+    int failure; //Fatal exception thrown during parsing. This idicates logic errors like bad asserts, out of bound reads etc. 
 
-	Coverage(int total) : total(total), good(0), unsupported(0), expected_failure(0), unexpected_failure(0) {}
+	Coverage(int total) : total(total), good(0), unsupported(0), failure(0) {}
 
 	void print() {
 		std::string report = "Good:\t\t" + std::to_string(good) + " (" + std::to_string(100.f * static_cast<float>(good)/static_cast<float>(total)) + "%)" + "\n" +
 			"Unsupported:\t" + std::to_string(unsupported) + " (" + std::to_string(100.f * static_cast<float>(unsupported) / static_cast<float>(total)) + "%)" + "\n" +
-			"Expected Bad:\t" + std::to_string(expected_failure) + " (" + std::to_string(100.f * static_cast<float>(expected_failure) / static_cast<float>(total)) + "%)" + "\n" +
-			"Unexpected Bad:\t" + std::to_string(unexpected_failure) + " (" + std::to_string(100.f * static_cast<float>(unexpected_failure) / static_cast<float>(total)) + "%)" + "\n";
+			"Bad:\t\t" + std::to_string(failure) + " (" + std::to_string(100.f * static_cast<float>(failure) / static_cast<float>(total)) + "%)" + "\n";
 
 		printf("%s\n", report.c_str());
 	}
@@ -43,7 +41,7 @@ void testCoverage(const std::string& type_string) {
 			coverage.unsupported++;
 		}
 		catch (...) {
-			coverage.unexpected_failure++;
+			coverage.failure++;
 		}
 		if(cnt % (ids.size()/100) == 0)
 			printf("%d, ", static_cast<int>(100.f *static_cast<float>(cnt)/static_cast<float>(ids.size())));
