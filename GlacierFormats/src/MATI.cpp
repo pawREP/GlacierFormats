@@ -54,27 +54,13 @@ namespace GlacierFormats {
 			binder.properties.reserve(binder_header.size);
 
 			br.seek(binder_header.data);
-			for (int i = 0; i < instance.bindProp.size; ++i) {
-				auto property = br.read<SProperty>();
+			for (int i = 0; i < binder_header.size; ++i) {
+				auto property = Property(br);
+				binder.properties.emplace(property.name, property);
 			}
 
-			//TODO: FIx MATI property binder parsing
-
-			//std::vector<SProperty> binder_properties(instance.bindProp.size);
-			//br.seek(binder_header.data);
-			//br.read(binder_properties.data(), binder_properties.size());
-			//for (auto& property : binder_properties) {
-			//	GLACIER_ASSERT_TRUE(property.type != PROPERTY_TYPE::PT_SPROPERTY);
-
-			//	//TODO: Fix property parsing. It's broken since the reader/buffer release changes.
-			//	//binder.properties.emplace(property.name, Property(property, data));
-			//}
-
-
-			//property_binders.push_back(binder);
+			property_binders.push_back(std::move(binder));
 		}
-
-		//raw_data = br->release();
 	}
 
 	void MATI::serialize(BinaryWriter& bw) {
@@ -108,49 +94,43 @@ namespace GlacierFormats {
 		}*/
 	}
 
-	Property::Property(SProperty* prop_, char* data_src) : prop(prop_) {
-		switch (prop->type) {
+	template<typename T>
+	void readPropData(Property::PropertyVariantType& variant, const SProperty& prop, BinaryReader& br) {
+		if (prop.size == 1)
+			variant = *reinterpret_cast<const T*>(&prop.data);
+		else {
+			br.seek(prop.data);
+			std::vector<T> vec;
+			for (int i = 0; i < prop.size; ++i)
+				vec.push_back(br.read<T>());
+			variant = vec;
+		}
+	}
+
+	Property::Property(BinaryReader& br) {
+		auto prop = br.read<SProperty>();
+		name = prop.name;
+
+		auto final_read_pos = br.tell();
+
+		switch (prop.type) {
 		case PROPERTY_TYPE::PT_FLOAT:
-			if (prop->size == 1)
-				data_variant = reinterpret_cast<float*>(&prop->data);
-			else
-				data_variant = reinterpret_cast<float*>(&data_src[prop->data]);
+			readPropData<float>(data_variant, prop, br);
 			break;
 		case PROPERTY_TYPE::PT_INT:
-			if (prop->size == 1)
-				data_variant = reinterpret_cast<int*>(&prop->data);
-			else
-				data_variant = reinterpret_cast<int*>(&data_src[prop->data]);
+			readPropData<int>(data_variant, prop, br);
 			break;
-		case PROPERTY_TYPE::PT_CSTRING:
-			data_variant = reinterpret_cast<char*>(&data_src[prop->data]);
+		case PROPERTY_TYPE::PT_CSTRING://Can string properties be stored inline in SProperty???
+			br.seek(prop.data);
+			data_variant = br.readCString();
 			break;
 		case PROPERTY_TYPE::PT_SPROPERTY:
 			throw;
 		default:
 			throw;
 		}
+		br.seek(final_read_pos);
 	}
-
-	std::string Property::name() const {
-		std::string name(prop->name, 4);
-		std::reverse(name.begin(), name.end());
-		return name;
-	}
-
-	uint32_t Property::size() const {
-		return prop->size;
-	}
-
-	PROPERTY_TYPE Property::type() const {
-		return prop->type;
-	}
-
-	//std::vector<Property>::const_iterator MATI::PropertyBinder::getPropertyByType(const char* type) const {
-	//	auto it = std::find_if(properties.begin(), properties.end(), [&type](const Property& prop) -> bool {return prop.name == type; });
-	//	assert(it == properties.end());
-	//	return it;
-	//}
 
 	bool MATI::PropertyBinder::contains(const char* name) const {
 		auto it = properties.find(name);

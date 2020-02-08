@@ -23,36 +23,31 @@ namespace GlacierFormats {
     };
 
     class Property {
+    public:
+        using PropertyVariantType = std::variant<std::string, int, float, std::vector<int>, std::vector<float >>;
+    
     private:
-        SProperty* prop;
-        std::variant<char*, int*, float*> data_variant;
+        PropertyVariantType data_variant;
 
     public:
-        Property(SProperty* prop, char* data);
 
-        std::string name() const;
-        uint32_t size() const;
-        PROPERTY_TYPE type() const;
+        Property(BinaryReader& br);
 
+        std::string name;
+        
         template<typename T>
         bool isType() const {
-            return std::holds_alternative<T*>(data_variant);
+            return std::holds_alternative<T>(data_variant);
         }
 
         template<typename T>
-        T* get() {
-            T** val0 = std::get_if<T*>(&data_variant);
-            if (val0 == nullptr)
-                return nullptr;
-            return *val0;
+        T& get() {
+            return std::get<T>(data_variant);
         }
 
         template<typename T>
-        const T* get() const {
-            T* const* val0 = std::get_if<T*>(&data_variant);
-            if (val0 == nullptr)
-                return nullptr;
-            return *val0;
+        const T& get() const {
+            return std::get<T>(data_variant);
         }
 
     };

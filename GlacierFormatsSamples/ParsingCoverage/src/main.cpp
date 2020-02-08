@@ -58,7 +58,9 @@ int main(int argc, char** argv) {
 	GlacierInit();
 	
 	//testCoverage<PRIM>("PRIM");
-	testCoverage<TEXD>("TEXD");
+	//testCoverage<TEXD>("TEXD");
+	testCoverage<MATI>("MATI");
 
+	std::cout << "done!\n";
 	std::cin.ignore();
 }

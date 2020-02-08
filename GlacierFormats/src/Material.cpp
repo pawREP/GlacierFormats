@@ -28,12 +28,12 @@ namespace GlacierFormats {
 		const auto& mati = mati_node->resource();
 		for (const auto& binder : mati->property_binders) {
 			if (binder.name == "TEXT") {
-				auto texture_name = binder.properties.at("NAME").get<char>();
+				auto texture_name = binder.properties.at("NAME").get<std::string>();
 				auto texture_index = binder.properties.at("TXID").get<int>();
 				//TODO: some txids, return -1 here, why?
-				if (*texture_index == -1)
+				if (texture_index == -1)
 					continue;
-				texture_names[*texture_index] = std::string(texture_name);
+				texture_names[texture_index] = std::string(texture_name);
 			}
 		}
 
