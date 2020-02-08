@@ -29,11 +29,7 @@ int main(int argc, char** argv) {
 			auto reference_type = repo->getResourceType(reference.id);
 			if (reference_type == "MATI") {
 				//Parse mati resource and add mati_name->prim_id association to multi_map
-				//auto mati_it = matis.find(reference.id);
-				//if (mati_it == matis.end()) {
-					auto mati = repo->getResource<MATI>(reference.id);
-				//	mati_it = matis.insert({ reference.id, std::move(mati) }).first;
-				//}
+				auto mati = repo->getResource<MATI>(reference.id);
 				mati_to_prim_multimap.insert({ mati->name, prim_id });
 			}
 		}
@@ -49,7 +45,7 @@ int main(int argc, char** argv) {
 		const auto& prim_id = line.second;
 		if (block_name != mati_name) {
 			ofs << mati_name << ":\n";
-			block_name == mati_name;
+			block_name = mati_name;
 		}
 		ofs << "\t" << prim_id << "\n";
 	}
