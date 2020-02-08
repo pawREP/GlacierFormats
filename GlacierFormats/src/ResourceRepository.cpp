@@ -70,7 +70,7 @@ std::filesystem::path ResourceRepository::runtime_dir = std::filesystem::path();
 		std::sort(rpkg_file_paths.begin(), rpkg_file_paths.end(), std::less<std::filesystem::path>());
 
 		for (const auto& s : rpkg_file_paths) {
-			stream_names.push_back(s.filename().generic_string());
+			stream_names.push_back(s.stem().generic_string());
 			streams.emplace_back(s, std::ifstream::binary);
 			auto& ifs = streams.back();
 
