@@ -48,6 +48,12 @@ namespace GlacierFormats {
 			memcpy_s(data.get(), buffer.size(), buffer.data(), buffer.size());
 			return buffer.size();
 		}
+
+		std::vector<char> serializeToBuffer() {
+			BinaryWriter bw;
+			reinterpret_cast<T*>(this)->serialize(bw);
+			return bw.release();
+		}
 	};
 
 	template<typename T>
