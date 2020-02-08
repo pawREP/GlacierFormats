@@ -38,7 +38,8 @@ int main(int argc, char** argv) {
 	//Build text file from multimap
 	auto out_path = std::filesystem::current_path() / "MatiNameToPrimIdMap.txt";
 	std::ofstream ofs(out_path);
-	
+	ofs << std::hex;
+
 	std::string block_name = "";
 	for (const auto& line : mati_to_prim_multimap) {
 		const auto& mati_name = line.first;
@@ -47,7 +48,7 @@ int main(int argc, char** argv) {
 			ofs << mati_name << ":\n";
 			block_name = mati_name;
 		}
-		ofs << "\t" << prim_id << "\n";
+		ofs << "\t0x" << std::setw(16) << std::setfill('0') << prim_id << "\n";
 	}
 	ofs.close();
 }
