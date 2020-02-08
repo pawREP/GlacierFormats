@@ -14,11 +14,6 @@ namespace GlacierFormats {
 				tex_count++;
 			}
 		}
-		//TODO: why does the code below not work??
-		//for (const auto& binder : mati->property_binders) {
-		//	if (binder.name == "TEXT")
-		//		tex_count++;
-		//}
 		return tex_count;
 	}
 
