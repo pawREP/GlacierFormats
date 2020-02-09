@@ -138,6 +138,5 @@ using namespace GlacierFormats;
 
 		bw.seek(0);
 		bw.write(header_offset);
-		bw.release();//TODO: Useless if BufferWriter is passed
 	}
 
