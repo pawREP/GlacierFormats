@@ -9,13 +9,16 @@ namespace GlacierFormats {
 	class BinaryWriter;
 
 	using Normal = Vec<float, 4>;
+	using Tangent = Vec<float, 4>;
+	using Bitangent = Vec<float, 4>;
 	using UV = Vec<float, 2>;
 
 	class VertexDataBuffer
 	{
 	public:
 		std::vector<Normal> normals;
-		std::vector<Vec<int, 2>> unk;
+		std::vector<Tangent> tangents;
+		std::vector<Bitangent> bitangents;
 		std::vector<UV> uvs;
 
 		VertexDataBuffer();
@@ -26,6 +29,7 @@ namespace GlacierFormats {
 		std::vector<float> getUVs() const;
 
 		void setNormals(const std::vector<float>&);
+		void setTangents(const std::vector<float>&);
 		void setUVs(const std::vector<float>&);
 	};
 }

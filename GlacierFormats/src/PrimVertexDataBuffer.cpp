@@ -8,11 +8,11 @@ using namespace GlacierFormats;
 
 namespace {
 
-	inline float DecompressNormal(uint8_t b) {
+	inline float Decompress8BitFloat(uint8_t b) {
 		return 2.0f * static_cast<float>(b) / 255.0f - 1.0f;
 	}
 
-	inline uint8_t CompressNormal(float f) {
+	inline uint8_t Compress8BitFloat(float f) {
 		return static_cast<uint8_t>(std::round((f + 1.0) / 2.0 * 255.0));
 	}
 
@@ -26,14 +26,14 @@ namespace {
 		std::vector<Vec<float, 4>> float_normals(vertex_count);
 		for (int i = 0; i < float_normals.size(); ++i) {
 			for (int j = 0; j < 4; ++j) {
-				float_normals[i][j] = DecompressNormal(original_byte_normals[i][j]);
+				float_normals[i][j] = Decompress8BitFloat(original_byte_normals[i][j]);
 			}
 		}
 
 		std::vector<Vec<uint8_t, 4>> new_byte_normals(vertex_count);
 		for (int i = 0; i < new_byte_normals.size(); ++i) {
 			for (int j = 0; j < 4; ++j) {
-				new_byte_normals[i][j] = CompressNormal(float_normals[i][j]);
+				new_byte_normals[i][j] = Compress8BitFloat(float_normals[i][j]);
 			}
 		}
 
@@ -56,7 +56,8 @@ namespace {
 
 	VertexDataBuffer::VertexDataBuffer(BinaryReader* br, const SPrimMesh* prim_mesh, const SPrimSubMesh* prim_submesh) {
 		normals.resize(prim_submesh->num_vertex);
-		unk.resize(prim_submesh->num_vertex);
+		tangents.resize(prim_submesh->num_vertex);
+		bitangents.resize(prim_submesh->num_vertex);
 		uvs.resize(prim_submesh->num_vertex);
 
 		//PerfectReserializationExperiment(br, prim_submesh->num_vertex);
@@ -67,14 +68,21 @@ namespace {
 
 			//Normal
 			//TODO: Consider switching to Vec<float, 3> normals, 4th term likely always .0f. Do scan of full repo to confirm. Would simplify mesh import a bit.
-			normals[i].x() = DecompressNormal(br->read<uint8_t>());
-			normals[i].y() = DecompressNormal(br->read<uint8_t>());
-			normals[i].z() = DecompressNormal(br->read<uint8_t>());
-			normals[i].w() = DecompressNormal(br->read<uint8_t>());
+			normals[i].x() = Decompress8BitFloat(br->read<uint8_t>());
+			normals[i].y() = Decompress8BitFloat(br->read<uint8_t>());
+			normals[i].z() = Decompress8BitFloat(br->read<uint8_t>());
+			normals[i].w() = Decompress8BitFloat(br->read<uint8_t>());
 
-			//UV coordinates
-			unk[i].x() = br->read<int>();//TODO: Figure out how this is used
-			unk[i].y() = br->read<int>();//TODO: Figure out how this is used
+			tangents[i].x() = Decompress8BitFloat(br->read<uint8_t>());
+			tangents[i].y() = Decompress8BitFloat(br->read<uint8_t>());
+			tangents[i].z() = Decompress8BitFloat(br->read<uint8_t>());
+			tangents[i].w() = Decompress8BitFloat(br->read<uint8_t>());
+
+			bitangents[i].x() = Decompress8BitFloat(br->read<uint8_t>());
+			bitangents[i].y() = Decompress8BitFloat(br->read<uint8_t>());
+			bitangents[i].z() = Decompress8BitFloat(br->read<uint8_t>());
+			bitangents[i].w() = Decompress8BitFloat(br->read<uint8_t>());
+
 			uvs[i].x() = static_cast<double>(br->read<short>())* prim_mesh->uv_scale[0] / 32767.0 + prim_mesh->uv_bias[0];
 			uvs[i].y() = static_cast<double>(br->read<short>())* prim_mesh->uv_scale[1] / 32767.0 + prim_mesh->uv_bias[1];
 		}
@@ -86,26 +94,22 @@ namespace {
 		bb.getIntegerRangeCompressionParameters(uv_scale, uv_bias);
 
 		for (size_t i = 0; i < normals.size(); ++i) {
-			//Normal
-			//bw->write(static_cast<uint8_t>(std::roundf(normals[i].x() * 128.0 + 128.0)));
-			//bw->write(static_cast<uint8_t>(std::roundf(normals[i].y() * 128.0 + 128.0)));
-			//bw->write(static_cast<uint8_t>(std::roundf(normals[i].z() * 128.0 + 128.0)));
-			//bw->write(static_cast<uint8_t>(std::roundf(normals[i].w() * 128.0 + 128.0)));
 
-			bw->write(CompressNormal(normals[i].x()));
-			bw->write(CompressNormal(normals[i].y()));
-			bw->write(CompressNormal(normals[i].z()));
-			bw->write(CompressNormal(normals[i].w()));
+			bw->write(Compress8BitFloat(normals[i].x()));
+			bw->write(Compress8BitFloat(normals[i].y()));
+			bw->write(Compress8BitFloat(normals[i].z()));
+			bw->write(Compress8BitFloat(normals[i].w()));
 
-			if (!unk.size()) {//Write dummy data if no unk buffer was set
-				bw->write<int>(0);
-				bw->write<int>(0);
-			}
-			else {
-				bw->write(unk[i].x());
-				bw->write(unk[i].y());
-			}
+			//TODO: Implement logic to calculate tangents and bitangents. Import routines might not initilize them.
+			bw->write(Compress8BitFloat(tangents[i].x()));
+			bw->write(Compress8BitFloat(tangents[i].y()));
+			bw->write(Compress8BitFloat(tangents[i].z()));
+			bw->write(Compress8BitFloat(tangents[i].w()));
 
+			bw->write(Compress8BitFloat(bitangents[i].x()));
+			bw->write(Compress8BitFloat(bitangents[i].y()));
+			bw->write(Compress8BitFloat(bitangents[i].z()));
+			bw->write(Compress8BitFloat(bitangents[i].w()));
 
 			//UV coordinates
 			bw->write(static_cast<short>(std::roundf(32767.0 * (uvs[i].x() - uv_bias[0]) / uv_scale[0])));
@@ -147,6 +151,18 @@ namespace {
 		//assert(vectorSizeInBytes(normals) == vectorSizeInBytes(normal_buffer));
 		for (int i = 0; i < normal_count; ++i) {
 			normals.emplace_back(normal_buffer[3 * i + 0], normal_buffer[3 * i + 1], normal_buffer[3 * i + 2], 0);
+		}
+	}
+
+	//TODO: Implement logic so bitangent is automatically calculated once normals and tangents are set.
+	void VertexDataBuffer::setTangents(const std::vector<float>& tangent_buffer) {
+		const int tangent_size = 3;
+		auto tangent_count = tangent_buffer.size() / tangent_size;
+
+		tangents = decltype(tangents)();
+		tangents.reserve(tangent_count);
+		for (int i = 0; i < tangent_count; ++i) {
+			tangents.emplace_back(tangent_buffer[3 * i + 0], tangent_buffer[3 * i + 1], tangent_buffer[3 * i + 2], 0);
 		}
 	}
 
