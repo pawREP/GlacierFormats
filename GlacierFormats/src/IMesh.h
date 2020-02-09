@@ -29,6 +29,7 @@ namespace GlacierFormats {
 		[[nodiscard]] virtual std::vector<float> getVertexBuffer() const = 0;
 		[[nodiscard]] virtual std::vector<unsigned short> getIndexBuffer() const = 0;
 		[[nodiscard]] virtual std::vector<float> getNormals() const = 0;
+		[[nodiscard]] virtual std::vector<float> getTangents() const = 0;
 		[[nodiscard]] virtual std::vector<float> getUVs() const = 0;
 		[[nodiscard]] virtual std::vector<BoneWeight> getBoneWeights() const = 0;
 
@@ -36,6 +37,7 @@ namespace GlacierFormats {
 		virtual void setVertexBuffer(const std::vector<float>&) = 0;
 		virtual void setIndexBuffer(const std::vector<unsigned short>&) = 0;
 		virtual void setNormals(const std::vector<float>&) = 0;
+		virtual void setTangents(const std::vector<float>&) = 0;
 		virtual void setUVs(const std::vector<float>&) = 0;
 		virtual void setBoneWeight(const std::vector<BoneWeight>&) = 0;
 		virtual void setName(const std::string& name) = 0;

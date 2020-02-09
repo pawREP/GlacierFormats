@@ -26,6 +26,7 @@ namespace GlacierFormats {
 		void serialize(BinaryWriter* bw, float scale[2], float bias[2]);
 
 		std::vector<float> getNormals() const;
+		std::vector<float> getTangents() const;
 		std::vector<float> getUVs() const;
 
 		void setNormals(const std::vector<float>&);

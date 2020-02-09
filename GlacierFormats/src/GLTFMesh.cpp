@@ -34,6 +34,10 @@ std::vector<float> GLTFMesh::getNormals() const {
     return normals;
 }
 
+std::vector<float> GlacierFormats::GLTFMesh::getTangents() const {
+    return tangents;
+}
+
 std::vector<float> GLTFMesh::getUVs() const {
     return uvs;
 }
@@ -52,6 +56,10 @@ void GLTFMesh::setIndexBuffer(const std::vector<unsigned short>& indices_) {
 
 void GLTFMesh::setNormals(const std::vector<float>& normals_) {
     normals = normals_;
+}
+
+void GlacierFormats::GLTFMesh::setTangents(const std::vector<float>& tangents_){
+    tangents = tangents_;
 }
 
 void GLTFMesh::setUVs(const std::vector<float>& uvs_) {

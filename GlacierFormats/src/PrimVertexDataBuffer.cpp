@@ -95,24 +95,29 @@ namespace {
 
 		for (size_t i = 0; i < normals.size(); ++i) {
 
-			bw->write(Compress8BitFloat(normals[i].x()));
-			bw->write(Compress8BitFloat(normals[i].y()));
-			bw->write(Compress8BitFloat(normals[i].z()));
-			bw->write(Compress8BitFloat(normals[i].w()));
+			const auto& normal = normals[i];
+			const auto& tangent = tangents[i];
+
+			bw->write(Compress8BitFloat(normal.x()));
+			bw->write(Compress8BitFloat(normal.y()));
+			bw->write(Compress8BitFloat(normal.z()));
+			bw->write(Compress8BitFloat(normal.w()));
 
 			//TODO: Implement logic to calculate tangents and bitangents. Import routines might not initilize them.
-			bw->write(Compress8BitFloat(tangents[i].x()));
-			bw->write(Compress8BitFloat(tangents[i].y()));
-			bw->write(Compress8BitFloat(tangents[i].z()));
-			bw->write(Compress8BitFloat(tangents[i].w()));
+			bw->write(Compress8BitFloat(tangent.x()));
+			bw->write(Compress8BitFloat(tangent.y()));
+			bw->write(Compress8BitFloat(tangent.z()));
+			bw->write(Compress8BitFloat(tangent.w()));
 
-			bw->write(Compress8BitFloat(bitangents[i].x()));
-			bw->write(Compress8BitFloat(bitangents[i].y()));
-			bw->write(Compress8BitFloat(bitangents[i].z()));
-			bw->write(Compress8BitFloat(bitangents[i].w()));
+			Vec<float, 3> bitangent = cross(normal.xyz(), tangent.xyz());
+
+			bw->write(Compress8BitFloat(bitangent.x()));
+			bw->write(Compress8BitFloat(bitangent.y()));
+			bw->write(Compress8BitFloat(bitangent.z()));
+			bw->write(Compress8BitFloat(0.f));
 
 			//UV coordinates
-			bw->write(static_cast<short>(std::roundf(32767.0 * (uvs[i].x() - uv_bias[0]) / uv_scale[0])));
+			bw->write(static_cast<short>(std::roundf(32767.0 * (uvs[i].x() - uv_bias[0]) / uv_scale[0])));//TODO: make generic integer range compression fn
 			bw->write(static_cast<short>(std::roundf(32767.0 * (uvs[i].y() - uv_bias[1]) / uv_scale[1])));
 		}
 	}
@@ -126,6 +131,16 @@ namespace {
 		for (const auto& normal : normals)
 			for (int i = 0; i < canonical_normal_size; ++i)
 				ret.push_back(normal[i]);
+		return ret;
+	}
+
+	std::vector<float> GlacierFormats::VertexDataBuffer::getTangents() const {
+		std::vector<float> ret;
+
+		const int tangent_size = 4;
+		auto f_cnt = tangents.size() * tangent_size;
+		ret.resize(f_cnt);
+		memcpy_s(ret.data(), f_cnt * sizeof(float), tangents.data(), f_cnt * sizeof(float));
 		return ret;
 	}
 
@@ -155,15 +170,15 @@ namespace {
 	}
 
 	//TODO: Implement logic so bitangent is automatically calculated once normals and tangents are set.
+	
+	//Set tangents from vector of floats. 4 floats per tangent.
 	void VertexDataBuffer::setTangents(const std::vector<float>& tangent_buffer) {
-		const int tangent_size = 3;
+		const int tangent_size = 4;
 		auto tangent_count = tangent_buffer.size() / tangent_size;
 
-		tangents = decltype(tangents)();
-		tangents.reserve(tangent_count);
-		for (int i = 0; i < tangent_count; ++i) {
-			tangents.emplace_back(tangent_buffer[3 * i + 0], tangent_buffer[3 * i + 1], tangent_buffer[3 * i + 2], 0);
-		}
+		tangents.resize(tangent_count);
+		auto tangent_data_size = tangent_size * tangent_count * sizeof(float);
+		memcpy_s(tangents.data(), tangent_data_size, tangent_buffer.data(), tangent_data_size);
 	}
 
 	void VertexDataBuffer::setUVs(const std::vector<float>& uv_buffer) {

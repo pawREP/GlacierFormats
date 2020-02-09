@@ -6,6 +6,7 @@ namespace GlacierFormats {
 		dst->setVertexBuffer(src->getVertexBuffer());
 		dst->setIndexBuffer(src->getIndexBuffer());
 		dst->setNormals(src->getNormals());
+		dst->setTangents(src->getTangents());
 		dst->setUVs(src->getUVs());
 		auto bone_weights = src->getBoneWeights();
 		if (bone_weights.size())

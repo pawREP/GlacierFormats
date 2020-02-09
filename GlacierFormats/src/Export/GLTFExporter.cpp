@@ -174,6 +174,7 @@ struct SkinnedMeshPrimitiveContext {
     std::string index_acc;
     std::string vertex_acc;
     std::string normal_acc;
+    std::string tangent_acc;
     std::string uv_coord_acc;
     std::vector<std::string>* joint_nodes;
     std::string joints_acc;
@@ -208,6 +209,11 @@ void CreateMeshPrimitveResources(BufferBuilder& buffer_builder, const GlacierFor
     buffer_builder.AddBufferView();
     auto normals = mesh->getNormals();
     ctx.normal_acc = buffer_builder.AddAccessor(normals, { TYPE_VEC3, COMPONENT_FLOAT }).id;
+
+    //Tangents
+    buffer_builder.AddBufferView();
+    auto tangents = mesh->getTangents();
+    ctx.tangent_acc = buffer_builder.AddAccessor(tangents, { TYPE_VEC4, COMPONENT_FLOAT }).id;
 
     //Texture coordinates
     buffer_builder.AddBufferView();
@@ -395,6 +401,7 @@ std::string CreateMesh(Document& document, const GlacierFormats::IMaterial* src_
     mesh_primitive.indicesAccessorId = ctx.index_acc;
     mesh_primitive.attributes[ACCESSOR_POSITION] = ctx.vertex_acc;
     mesh_primitive.attributes[ACCESSOR_NORMAL] = ctx.normal_acc;
+    mesh_primitive.attributes[ACCESSOR_TANGENT] = ctx.tangent_acc;
     mesh_primitive.attributes[ACCESSOR_TEXCOORD_0] = ctx.uv_coord_acc;
     if (ctx.is_weighted_mesh) {
         mesh_primitive.attributes[ACCESSOR_JOINTS_0] = ctx.joints_acc;

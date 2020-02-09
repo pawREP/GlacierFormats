@@ -73,12 +73,14 @@ namespace GlacierFormats {
 		[[nodiscard]] std::vector<float> getVertexBuffer() const override final;
 		[[nodiscard]] std::vector<unsigned short> getIndexBuffer() const override final;
 		[[nodiscard]] std::vector<float> getNormals() const override final;
+		[[nodiscard]] std::vector<float> getTangents() const override final;
 		[[nodiscard]] std::vector<float> getUVs() const override final;
 		[[nodiscard]] std::vector<IMesh::BoneWeight> getBoneWeights() const override final;
 
 		void setVertexBuffer(const std::vector<float>&) override final;
 		void setIndexBuffer(const std::vector<unsigned short>&) override final;
 		void setNormals(const std::vector<float>&) override final;
+		void setTangents(const std::vector<float>&) override final;
 		void setUVs(const std::vector<float>&) override final;
 		void setBoneWeight(const std::vector<BoneWeight>&) override final;
 		void setName(const std::string& name) override final;

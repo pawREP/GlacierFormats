@@ -49,6 +49,10 @@ using namespace GlacierFormats;
 		prim->vertex_data->setNormals(normals);
 	}
 
+	void ZRenderPrimitiveBuilder::setTangentBuffer(const std::vector<float>& tangents) {
+		prim->vertex_data->setNormals(tangents);
+	}
+
 	void ZRenderPrimitiveBuilder::setVertexBuffer(std::unique_ptr<VertexBuffer> vertex_buffer) {
 		prim->vertex_buffer = std::move(vertex_buffer);
 	}

@@ -21,6 +21,7 @@ namespace GlacierFormats {
 		void setIndexBuffer(const std::vector<unsigned short>& indices);
 		void setUvBuffer(const std::vector<float>& uvs);
 		void setNormalBuffer(const std::vector<float>& normals);
+		void setTangentBuffer(const std::vector<float>& tangents);
 
 		void setVertexBuffer(std::unique_ptr<VertexBuffer> vertex_buffer);
 		void setIndexBuffer(std::unique_ptr<IndexBuffer> index_buffer);

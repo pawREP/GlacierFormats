@@ -86,6 +86,10 @@ using namespace GlacierFormats;
 		return vertex_data->getNormals();
 	}
 
+	std::vector<float> GlacierFormats::ZRenderPrimitive::getTangents() const {
+		return vertex_data->getTangents();
+	}
+
 	[[nodiscard]] std::vector<float> ZRenderPrimitive::getUVs() const
 	{
 		return vertex_data->getUVs();
@@ -115,6 +119,12 @@ using namespace GlacierFormats;
 		if (!vertex_data)
 			vertex_data = std::make_unique<VertexDataBuffer>();
 		vertex_data->setNormals(normal_buffer_);
+	}
+
+	void GlacierFormats::ZRenderPrimitive::setTangents(const std::vector<float>& tangents_) {
+		if (!vertex_data)
+			vertex_data = std::make_unique<VertexDataBuffer>();
+		vertex_data->setTangents(tangents_);
 	}
 
 	void ZRenderPrimitive::setUVs(const std::vector<float>& uvs) {

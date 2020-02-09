@@ -166,6 +166,14 @@ GLTFAsset::GLTFAsset(const std::filesystem::path& path, const std::unordered_map
                 auto normal_data = resourceReader->ReadBinaryData<float>(document, accessor);
                 gltf_mesh->setNormals(std::move(normal_data));
             }
+            //TODO: Error handling for missing normals, tangents, tex coords.
+            //tangents
+            GLACIER_ASSERT_TRUE(primitive.TryGetAttributeAccessorId(ACCESSOR_TANGENT, accessor_id));
+            {
+                const Accessor& accessor = document.accessors.Get(accessor_id);
+                auto tangent_data = resourceReader->ReadBinaryData<float>(document, accessor);
+                gltf_mesh->setTangents(std::move(tangent_data));
+            }
 
             //bone data
             if (primitive.HasAttribute(ACCESSOR_JOINTS_0) && primitive.HasAttribute(ACCESSOR_WEIGHTS_0) && (node.skinId != "")) {
