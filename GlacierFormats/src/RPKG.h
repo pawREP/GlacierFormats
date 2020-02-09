@@ -59,6 +59,7 @@ namespace GlacierFormats {
 
 
 	class RPKG {
+		//TODO: Needs major refactor since the requirements for this class changed significantly since ResouceRespository was factored out
 	private:
 		std::unique_ptr<BinaryReader> br;
 
