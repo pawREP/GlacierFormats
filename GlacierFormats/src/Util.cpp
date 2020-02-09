@@ -26,3 +26,13 @@ std::string GlacierFormats::Util::incrementArchiveName(const std::string& archiv
 		throw std::runtime_error("Invalid archive name");
 	}
 }
+
+bool GlacierFormats::Util::isRuntimeIdString(const std::string& str) {
+	try {
+		RuntimeId id(str);
+	}
+	catch (...) {
+		return false;
+	}
+	return true;
+}

@@ -24,6 +24,8 @@ namespace GlacierFormats {
 		//	chunk0patch1 -> chunk0patch2
 		//	...
 		std::string incrementArchiveName(const std::string& archiveName);
+
+		bool isRuntimeIdString(const std::string& str);
 	}
 
 }
