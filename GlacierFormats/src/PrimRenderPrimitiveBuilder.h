@@ -29,6 +29,7 @@ namespace GlacierFormats {
 		void setBoneWeightBuffer(std::unique_ptr<BoneWeightBuffer> boneweight_buffer);
 		void setBoneFlags(std::unique_ptr<BoneFlags> bone_flags);
 		void setCollisionBuffer(std::unique_ptr<CollisionData> collision);
+		void setLinkTable(std::unique_ptr<LinkTable> link_table);
 		void setClothData(std::unique_ptr<ClothData> collision);
 		void setBoneInfo(std::unique_ptr<BoneInfo> bone_info);
 		void setMUnkTabl2(std::unique_ptr<MUnkTabl2> m2);

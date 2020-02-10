@@ -84,6 +84,10 @@ namespace GlacierFormats {
 		int m_unk_tabl2_offset;
 	};
 
+	struct SPrimMeshLinked : public SPrimMesh {
+		unsigned int link_table;
+	};
+
 	struct SPrimMeshWeighted : public SPrimMesh {
 		unsigned int bone_info;
 		unsigned int num_copy_bones;

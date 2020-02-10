@@ -1,6 +1,7 @@
 #pragma once
 #include "PrimSerializationTypes.h"
 #include <memory>
+#include <vector>
 
 namespace GlacierFormats {
 
@@ -12,8 +13,7 @@ namespace GlacierFormats {
 
 	class BoneInfo
 	{
-		uint16_t data_size;
-		std::unique_ptr<char[]> data;//TODO: Make vector, do the same with all the other structs of this type.
+		std::vector<char> data;
 
 	public:
 		BoneInfo(BinaryReader* br);

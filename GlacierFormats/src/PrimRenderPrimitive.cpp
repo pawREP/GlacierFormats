@@ -21,6 +21,7 @@ using namespace GlacierFormats;
 		bone_weight_buffer = std::move(src.bone_weight_buffer);
 		bone_flags = std::move(src.bone_flags);
 		collision_data = std::move(src.collision_data);
+		link_table = std::move(src.link_table);
 		cloth_data = std::move(src.cloth_data);
 		bone_info = std::move(src.bone_info);
 		m_unk_tabl2 = std::move(src.m_unk_tabl2);

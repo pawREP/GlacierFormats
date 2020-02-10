@@ -98,7 +98,6 @@ namespace GlacierFormats {
 		}
 	};
 
-	//TODO: replace data ptr with istream;
 	class BinaryReader {
 		std::unique_ptr<IBinaryReaderSource> source;
 
@@ -149,6 +148,15 @@ namespace GlacierFormats {
 			read(&value, 1);
 			return value;
 		};
+
+		template<typename T>
+		T peek() {
+			auto read_pos = tell();
+			T value;
+			read(&value, 1);
+			seek(read_pos);
+			return value;
+		}
 
 		template<unsigned int len, Endianness en>
 		std::string readString() {

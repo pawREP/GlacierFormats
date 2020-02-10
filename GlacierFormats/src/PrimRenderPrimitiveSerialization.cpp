@@ -141,17 +141,15 @@ using namespace GlacierFormats;
 		return object_offset;
 	}
 
-
-	std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserialize(BinaryReader* br, const SPrimObjectHeader* const prim_object_header) {
-		auto object_offset = br->tell();
-		auto prim_mesh = br->read<SPrimMeshWeighted>();
+	//TODO: It might be better to factor parsing for different mesh subtypes into seperate functions, like in the original code. Duplicate code/readabiliy tradoff.
+	std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeStandardMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header) {
+		auto prim_mesh = br->read<SPrimMesh>();
 
 		GLACIER_ASSERT_TRUE(prim_mesh.draw_destination == 0);
 		GLACIER_ASSERT_TRUE(prim_mesh.pack_type == 0);
 		GLACIER_ASSERT_TRUE(prim_mesh.type == SPrimObjectHeader::EPrimType::PTMESH);
 		GLACIER_ASSERT_TRUE(prim_mesh.m_unk_tabl1_offset == 0);
-		if (prim_mesh.sub_type == SPrimSubMesh::SUBTYPE_STANDARD)
-			GLACIER_ASSERT_TRUE(prim_mesh.m_unk_tabl2_offset == 0);
+		GLACIER_ASSERT_TRUE(prim_mesh.m_unk_tabl2_offset == 0);
 
 		br->seek(prim_mesh.sub_mesh_table);
 		auto submesh_offset = br->read<uint32_t>();
@@ -167,68 +165,315 @@ using namespace GlacierFormats;
 		if (prim_submesh.num_uv_channels != 1)
 			throw UnsupportedFeatureException("Meshes with more than one UV channel are not supported.");
 
-		ZRenderPrimitiveBuilder builder;
+		auto prim = std::make_unique<ZRenderPrimitive>();
 
 		//TODO: Add all the missing remnant values here
-		//remnant.sub_type = prim_mesh.sub_type;
-		//remnant.properties = prim_mesh.properties;
-		builder.setWireColor(prim_mesh.wire_color);
-		builder.setLodMask(prim_mesh.lod_mask);
-		builder.setVariantId(prim_mesh.variant_id);
-		//remnant.bias = prim_mesh.bias;
-		//remnant.offset = prim_mesh.offset;
-		builder.setMaterialId(prim_mesh.material_id);
-		//remnant.unk2 = prim_mesh.unk2;
-		//remnant.unk17 = prim_mesh.unk17;
+		prim->remnant.wire_color = prim_mesh.wire_color;
+		prim->remnant.lod_mask = prim_mesh.lod_mask;
+		prim->remnant.material_id = prim_mesh.material_id;
+		prim->remnant.variant_id = prim_mesh.variant_id;
 
 		br->seek(prim_submesh.index_buffer);
-		auto index_buffer = std::make_unique<IndexBuffer>(br, &prim_submesh);
-		builder.setIndexBuffer(std::move(index_buffer));
+		prim->index_buffer = std::make_unique<IndexBuffer>(br, &prim_submesh);
 
 		br->seek(prim_submesh.vertex_buffer);
-		auto vertex_buffer = std::make_unique<VertexBuffer>(br, prim_object_header, &prim_mesh, &prim_submesh);
-		builder.setVertexBuffer(std::move(vertex_buffer));
+		prim->vertex_buffer = std::make_unique<VertexBuffer>(br, prim_object_header, &prim_mesh, &prim_submesh);
+		prim->vertex_data = std::make_unique<VertexDataBuffer>(br, &prim_mesh, &prim_submesh);
 
-		if (prim_mesh.sub_type == SPrimSubMesh::SUBTYPE_WEIGHTED) {
-			auto boneweight_buffer = std::make_unique<BoneWeightBuffer>(br, &prim_submesh);
-			builder.setBoneWeightBuffer(std::move(boneweight_buffer));
-		}
-
-		auto vertex_data_buffer = std::make_unique<VertexDataBuffer>(br, &prim_mesh, &prim_submesh);
-		builder.setVertexDataBuffer(std::move(vertex_data_buffer));
-
-		if (prim_mesh.sub_type == SPrimSubMesh::SUBTYPE_WEIGHTED) {
-			auto bone_flags = std::make_unique<BoneFlags>(br, &prim_submesh);
-			builder.setBoneFlags(std::move(bone_flags));
-		}
-
-		//TODO: reenable cloth data parsing once the size of this struct is better understood.
 		if (prim_submesh.cloth) {
 			br->seek(prim_submesh.cloth);
-			auto cloth_data = std::make_unique<ClothData>(br, &prim_submesh);
-			builder.setClothData(std::move(cloth_data));
+			prim->cloth_data = std::make_unique<ClothData>(br, &prim_submesh);
 		}
 
 		if (prim_submesh.collision) {
 			br->seek(prim_submesh.collision);
-			auto collision_buffer = std::make_unique<CollisionData>(br);
-			builder.setCollisionBuffer(std::move(collision_buffer));
+			prim->collision_data = std::make_unique<CollisionData>(br);
 		}
 		br->align();
 
-		if (prim_mesh.sub_type == SPrimSubMesh::SUBTYPE_WEIGHTED && prim_mesh.bone_info) {
-			br->seek(prim_mesh.bone_info);
-			auto bone_info = std::make_unique<BoneInfo>(br);
-			builder.setBoneInfo(std::move(bone_info));
-		}
-		br->align();
-
-		if (prim_mesh.m_unk_tabl2_offset) {
-			br->seek(prim_mesh.m_unk_tabl2_offset);
-			auto m2 = std::make_unique<MUnkTabl2>(br);
-			builder.setMUnkTabl2(std::move(m2));
-		}
-		br->align();
-
-		return builder.build();
+		return prim;
 	}
+
+
+std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeightedMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header) {
+	auto object_offset = br->tell();
+	auto prim_mesh = br->read<SPrimMeshWeighted>();
+	br->align();
+
+	GLACIER_ASSERT_TRUE(prim_mesh.draw_destination == 0);
+	GLACIER_ASSERT_TRUE(prim_mesh.pack_type == 0);
+	GLACIER_ASSERT_TRUE(prim_mesh.type == SPrimObjectHeader::EPrimType::PTMESH);
+	GLACIER_ASSERT_TRUE(prim_mesh.m_unk_tabl1_offset == 0);
+
+	br->seek(prim_mesh.sub_mesh_table);
+	auto submesh_offset = br->read<uint32_t>();
+	br->align();//This align will fail if a mesh has more than one submesh which I don't think is possible.
+
+	br->seek(submesh_offset);
+	auto prim_submesh = br->read<SPrimSubMesh>();
+
+	//Throw on sub_meshes with multiple uv channels.
+	//TODO: Note for later: This restriction was originally made because SMD doesn't support multiple UV channels.
+	//Multiple UVs could be supported now since the switch to GLTF and FBX export. Might still not be worth it since apparently
+	//only skybox meshes use this feature in the first place. That's not 100% confirmed atm though.
+	if (prim_submesh.num_uv_channels != 1)
+		throw UnsupportedFeatureException("Meshes with more than one UV channel are not supported.");
+
+	auto prim = std::make_unique<ZRenderPrimitive>();
+
+	//TODO: Add all the missing remnant values here
+	prim->remnant.wire_color = prim_mesh.wire_color;
+	prim->remnant.lod_mask = prim_mesh.lod_mask;
+	prim->remnant.material_id = prim_mesh.material_id;
+	prim->remnant.variant_id = prim_mesh.variant_id;
+
+	br->seek(prim_submesh.index_buffer);
+	prim->index_buffer = std::make_unique<IndexBuffer>(br, &prim_submesh);
+
+	br->seek(prim_submesh.vertex_buffer);
+	prim->vertex_buffer = std::make_unique<VertexBuffer>(br, prim_object_header, &prim_mesh, &prim_submesh);
+	prim->bone_weight_buffer = std::make_unique<BoneWeightBuffer>(br, &prim_submesh);
+	prim->vertex_data = std::make_unique<VertexDataBuffer>(br, &prim_mesh, &prim_submesh);
+	prim->bone_flags = std::make_unique<BoneFlags>(br, &prim_submesh);
+
+	if (prim_submesh.cloth) {
+		br->seek(prim_submesh.cloth);
+		prim->cloth_data = std::make_unique<ClothData>(br, &prim_submesh);
+	}
+
+	if (prim_submesh.collision) {
+		br->seek(prim_submesh.collision);
+		prim->collision_data = std::make_unique<CollisionData>(br);
+	}
+	br->align();
+
+	if (prim_mesh.bone_info) {
+		br->seek(prim_mesh.bone_info);
+		prim->bone_info = std::make_unique<BoneInfo>(br);
+	}
+	br->align();
+
+	if (prim_mesh.m_unk_tabl2_offset) {
+		br->seek(prim_mesh.m_unk_tabl2_offset);
+		prim->m_unk_tabl2 = std::make_unique<MUnkTabl2>(br);
+	}
+	br->align();
+
+	return prim;
+}
+
+//std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeLinkedMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header) {
+//	auto object_offset = br->tell();
+//	auto prim_mesh = br->read<SPrimMeshLinked>();
+//	br->align();
+//
+//	GLACIER_ASSERT_TRUE(prim_mesh.draw_destination == 0);
+//	GLACIER_ASSERT_TRUE(prim_mesh.pack_type == 0);
+//	GLACIER_ASSERT_TRUE(prim_mesh.type == SPrimObjectHeader::EPrimType::PTMESH);
+//	GLACIER_ASSERT_TRUE(prim_mesh.m_unk_tabl1_offset == 0);
+//
+//	br->seek(prim_mesh.sub_mesh_table);
+//	auto submesh_offset = br->read<uint32_t>();
+//	br->align();//This align will fail if a mesh has more than one submesh which I don't think is possible.
+//
+//	br->seek(submesh_offset);
+//	auto prim_submesh = br->read<SPrimSubMesh>();
+//
+//	//Throw on sub_meshes with multiple uv channels.
+//	//TODO: Note for later: This restriction was originally made because SMD doesn't support multiple UV channels.
+//	//Multiple UVs could be supported now since the switch to GLTF and FBX export. Might still not be worth it since apparently
+//	//only skybox meshes use this feature in the first place. That's not 100% confirmed atm though.
+//	if (prim_submesh.num_uv_channels != 1)
+//		throw UnsupportedFeatureException("Meshes with more than one UV channel are not supported.");
+//
+//	ZRenderPrimitiveBuilder builder;
+//
+//	//TODO: Add all the missing remnant values here
+//	//remnant.sub_type = prim_mesh.sub_type;
+//	//remnant.properties = prim_mesh.properties;
+//	builder.setWireColor(prim_mesh.wire_color);
+//	builder.setLodMask(prim_mesh.lod_mask);
+//	builder.setVariantId(prim_mesh.variant_id);
+//	//remnant.bias = prim_mesh.bias;
+//	//remnant.offset = prim_mesh.offset;
+//	builder.setMaterialId(prim_mesh.material_id);
+//	//remnant.unk2 = prim_mesh.unk2;
+//	//remnant.unk17 = prim_mesh.unk17;
+//
+//	br->seek(prim_mesh.link_table);
+//	auto link_table = std::make_unique<LinkTable>(br);
+//	builder.setLinkTable(std::move(link_table));
+//
+//	br->seek(prim_submesh.index_buffer);
+//	auto index_buffer = std::make_unique<IndexBuffer>(br, &prim_submesh);
+//	builder.setIndexBuffer(std::move(index_buffer));
+//
+//	br->seek(prim_submesh.vertex_buffer);
+//	auto vertex_buffer = std::make_unique<VertexBuffer>(br, prim_object_header, &prim_mesh, &prim_submesh);
+//	builder.setVertexBuffer(std::move(vertex_buffer));
+//
+//	auto boneweight_buffer = std::make_unique<BoneWeightBuffer>(br, &prim_submesh);
+//	builder.setBoneWeightBuffer(std::move(boneweight_buffer));
+//
+//	auto vertex_data_buffer = std::make_unique<VertexDataBuffer>(br, &prim_mesh, &prim_submesh);
+//	builder.setVertexDataBuffer(std::move(vertex_data_buffer));
+//
+//	auto bone_flags = std::make_unique<BoneFlags>(br, &prim_submesh);
+//	builder.setBoneFlags(std::move(bone_flags));
+//
+//	if (prim_submesh.cloth) {
+//		br->seek(prim_submesh.cloth);
+//		auto cloth_data = std::make_unique<ClothData>(br, &prim_submesh);
+//		builder.setClothData(std::move(cloth_data));
+//	}
+//
+//	//TODO: Collision parsing is temporarily disabled due to incompatibilities with LINKED mesh sub type meshes.
+//	//if (prim_submesh.collision) {
+//	//	br->seek(prim_submesh.collision);
+//	//	auto collision_buffer = std::make_unique<CollisionData>(br);
+//	//	builder.setCollisionBuffer(std::move(collision_buffer));
+//	//}
+//	//br->align();
+//
+//	if (bone_info_offset) {
+//		br->seek(bone_info_offset);
+//		auto bone_info = std::make_unique<BoneInfo>(br);
+//		builder.setBoneInfo(std::move(bone_info));
+//	}
+//
+//	br->align();
+//
+//	if (prim_mesh->m_unk_tabl2_offset) {
+//		br->seek(prim_mesh->m_unk_tabl2_offset);
+//		auto m2 = std::make_unique<MUnkTabl2>(br);
+//		builder.setMUnkTabl2(std::move(m2));
+//	}
+//	br->align();
+//
+//	return builder.build();
+//}
+
+
+
+	////TODO: It might be better to factor parsing for different mesh subtypes into seperate functions, like in the original code. Duplicate code/readabiliy tradoff.
+	//std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeStandardMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header) {
+	//	auto object_offset = br->tell();
+	//	auto prim_mesh_base = br->read<SPrimMesh>();
+
+	//	std::unique_ptr<SPrimMesh> prim_mesh = nullptr;
+	//	switch (prim_mesh_base.sub_type) {
+	//	case SPrimSubMesh::SUBTYPE_STANDARD:
+	//		prim_mesh = std::make_unique<SPrimMesh>();
+	//		memcpy_s(prim_mesh.get(), sizeof(SPrimMesh), &prim_mesh_base, sizeof(SPrimMesh));
+	//		break;
+	//	case SPrimSubMesh::SUBTYPE_LINKED:
+	//		prim_mesh = std::make_unique<SPrimMeshLinked>();
+	//		br->seek(object_offset);
+	//		br->read(prim_mesh.get(), sizeof(SPrimMeshLinked));
+	//		break;
+	//	case SPrimSubMesh::SUBTYPE_WEIGHTED:
+	//		prim_mesh = std::make_unique<SPrimMeshWeighted>();
+	//		br->seek(object_offset);
+	//		br->read(prim_mesh.get(), sizeof(SPrimMeshWeighted));
+	//		break;
+	//	default:
+	//		throw std::runtime_error("Invalid prim submesh type");
+	//	}
+	//	br->align();
+
+	//	GLACIER_ASSERT_TRUE(prim_mesh->draw_destination == 0);
+	//	GLACIER_ASSERT_TRUE(prim_mesh->pack_type == 0);
+	//	GLACIER_ASSERT_TRUE(prim_mesh->type == SPrimObjectHeader::EPrimType::PTMESH);
+	//	GLACIER_ASSERT_TRUE(prim_mesh->m_unk_tabl1_offset == 0);
+	//	if (prim_mesh->sub_type == SPrimSubMesh::SUBTYPE_STANDARD)
+	//		GLACIER_ASSERT_TRUE(prim_mesh->m_unk_tabl2_offset == 0);
+
+	//	br->seek(prim_mesh->sub_mesh_table);
+	//	auto submesh_offset = br->read<uint32_t>();
+	//	br->align();//This align will fail if a mesh has more than one submesh which I don't think is possible.
+
+	//	br->seek(submesh_offset);
+	//	auto prim_submesh = br->read<SPrimSubMesh>();
+
+	//	//Throw on sub_meshes with multiple uv channels.
+	//	//TODO: Note for later: This restriction was originally made because SMD doesn't support multiple UV channels.
+	//	//Multiple UVs could be supported now since the switch to GLTF and FBX export. Might still not be worth it since apparently
+	//	//only skybox meshes use this feature in the first place. That's not 100% confirmed atm though.
+	//	if (prim_submesh.num_uv_channels != 1)
+	//		throw UnsupportedFeatureException("Meshes with more than one UV channel are not supported.");
+
+	//	ZRenderPrimitiveBuilder builder;
+
+	//	//TODO: Add all the missing remnant values here
+	//	//remnant.sub_type = prim_mesh.sub_type;
+	//	//remnant.properties = prim_mesh.properties;
+	//	builder.setWireColor(prim_mesh->wire_color);
+	//	builder.setLodMask(prim_mesh->lod_mask);
+	//	builder.setVariantId(prim_mesh->variant_id);
+	//	//remnant.bias = prim_mesh.bias;
+	//	//remnant.offset = prim_mesh.offset;
+	//	builder.setMaterialId(prim_mesh->material_id);
+	//	//remnant.unk2 = prim_mesh.unk2;
+	//	//remnant.unk17 = prim_mesh.unk17;
+
+	//	if (prim_mesh_base.sub_type == SPrimSubMesh::SUBTYPE_LINKED) {
+	//		//auto link_table_offset = reinterpret_cast<SPrimMeshLinked*>(prim_mesh.get())->link_table;
+	//		//br->seek(link_table_offset);
+	//		//auto link_table = std::make_unique<LinkTable>(br);
+	//		//builder.setLinkTable(std::move(link_table));
+	//	}
+
+	//	br->seek(prim_submesh.index_buffer);
+	//	auto index_buffer = std::make_unique<IndexBuffer>(br, &prim_submesh);
+	//	builder.setIndexBuffer(std::move(index_buffer));
+
+	//	br->seek(prim_submesh.vertex_buffer);
+	//	auto vertex_buffer = std::make_unique<VertexBuffer>(br, prim_object_header, prim_mesh.get(), &prim_submesh);
+	//	builder.setVertexBuffer(std::move(vertex_buffer));
+
+	//	if (prim_mesh->sub_type == SPrimSubMesh::SUBTYPE_WEIGHTED) {
+	//		auto boneweight_buffer = std::make_unique<BoneWeightBuffer>(br, &prim_submesh);
+	//		builder.setBoneWeightBuffer(std::move(boneweight_buffer));
+	//	}
+
+	//	auto vertex_data_buffer = std::make_unique<VertexDataBuffer>(br, prim_mesh.get(), &prim_submesh);
+	//	builder.setVertexDataBuffer(std::move(vertex_data_buffer));
+
+	//	if (prim_mesh->sub_type == SPrimSubMesh::SUBTYPE_WEIGHTED) {
+	//		auto bone_flags = std::make_unique<BoneFlags>(br, &prim_submesh);
+	//		builder.setBoneFlags(std::move(bone_flags));
+	//	}
+
+	//	if (prim_submesh.cloth) {
+	//		br->seek(prim_submesh.cloth);
+	//		auto cloth_data = std::make_unique<ClothData>(br, &prim_submesh);
+	//		builder.setClothData(std::move(cloth_data));
+	//	}
+
+	//	//TODO: Collision parsing is temporarily disabled due to incompatibilities with LINKED mesh sub type meshes.
+	//	//if (prim_submesh.collision) {
+	//	//	br->seek(prim_submesh.collision);
+	//	//	auto collision_buffer = std::make_unique<CollisionData>(br);
+	//	//	builder.setCollisionBuffer(std::move(collision_buffer));
+	//	//}
+	//	//br->align();
+
+	//	if (prim_mesh->sub_type == SPrimSubMesh::SUBTYPE_WEIGHTED) {
+	//		auto bone_info_offset = reinterpret_cast<SPrimMeshWeighted*>(prim_mesh.get())->bone_info;
+	//		if (bone_info_offset) {
+	//			br->seek(bone_info_offset);
+	//			auto bone_info = std::make_unique<BoneInfo>(br);
+	//			builder.setBoneInfo(std::move(bone_info));
+	//		}
+	//	}
+	//	br->align();
+
+	//	if (prim_mesh->m_unk_tabl2_offset) {
+	//		br->seek(prim_mesh->m_unk_tabl2_offset);
+	//		auto m2 = std::make_unique<MUnkTabl2>(br);
+	//		builder.setMUnkTabl2(std::move(m2));
+	//	}
+	//	br->align();
+
+	//	return builder.build();
+	//}

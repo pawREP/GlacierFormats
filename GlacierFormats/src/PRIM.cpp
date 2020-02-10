@@ -35,20 +35,22 @@ using namespace GlacierFormats;
 		for (const auto& object_offset : object_table) {
 			br.seek(object_offset);
 			auto object = br.read<SPrimObject>();
+			br.seek(object_offset);
 
 			GLACIER_ASSERT_TRUE(object.draw_destination == 0)
 			GLACIER_ASSERT_TRUE(object.pack_type == 0)
 			GLACIER_ASSERT_TRUE(object.type == SPrimHeader::PTMESH)
 
+			RenderPrimitiveDeserializer deserializer;
+			std::unique_ptr<ZRenderPrimitive> prim = nullptr;
 			switch (object.sub_type) {
-			case SPrimObject::SUBTYPE_STANDARD:
+			case SPrimObject::SUBTYPE_STANDARD:					
+				prim = deserializer.deserializeStandardMesh(&br, &prim_object_header);
+				primitives.push_back(std::move(prim));
+				break;
 			case SPrimObject::SUBTYPE_WEIGHTED:
-				br.seek(object_offset);
-				{
-					RenderPrimitiveDeserializer deserializer;
-					auto primitive = deserializer.deserialize(&br, &prim_object_header);
-					primitives.push_back(std::move(primitive));
-				}
+				prim = deserializer.deserializeWeightedMesh(&br, &prim_object_header);
+				primitives.push_back(std::move(prim));
 				break;
 			case SPrimObject::SUBTYPE_LINKED: // SUBTYPE_LINKED
 				throw UnsupportedFeatureException("SPrimObject::SUBTYPE_LINKED not supported");

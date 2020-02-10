@@ -46,7 +46,7 @@ std::unique_ptr<Extension> ExtensionDeserializer::Deserialize(const ExtensionPai
 
     if (it == nameToType.end())
     {
-        throw GLTFException("No handler registered to deserialize the specified extension name");
+        throw GLTFException("No handler registered to deserializeStandardMesh the specified extension name");
     }
 
     return Process({ it->second, it->first.second }, extensionPair.value, *this);

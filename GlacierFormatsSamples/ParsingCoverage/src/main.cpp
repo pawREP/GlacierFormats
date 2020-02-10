@@ -41,6 +41,7 @@ void testCoverage(const std::string& type_string) {
 			coverage.unsupported++;
 		}
 		catch (...) {
+			printf("\n0x%s\n", static_cast<std::string>(id).c_str());
 			coverage.failure++;
 		}
 		if(cnt % (ids.size()/100) == 0)
@@ -57,9 +58,9 @@ int main(int argc, char** argv) {
 	//Initilize GlacierFormats with a runtime directory.
 	GlacierInit();
 	
-	//testCoverage<PRIM>("PRIM");
+	testCoverage<PRIM>("PRIM");
 	//testCoverage<TEXD>("TEXD");
-	testCoverage<MATI>("MATI");
+	//testCoverage<MATI>("MATI");
 
 	std::cout << "done!\n";
 	std::cin.ignore();
