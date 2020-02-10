@@ -39,6 +39,7 @@ namespace GlacierFormats {
 			//0 invis
 			//1 shorter than cam range vis, 
 			//2 visible between 0.5-3 cam ranges.
+
 			char variant_id = 0;
 			char bias = 0;
 			char offset = 0;

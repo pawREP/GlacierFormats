@@ -187,7 +187,7 @@ using namespace GlacierFormats;
 
 		if (prim_submesh.collision) {
 			br->seek(prim_submesh.collision);
-			prim->collision_data = std::make_unique<CollisionData>(br);
+			prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::STANDARD);
 		}
 		br->align();
 
@@ -243,7 +243,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeight
 
 	if (prim_submesh.collision) {
 		br->seek(prim_submesh.collision);
-		prim->collision_data = std::make_unique<CollisionData>(br);
+		prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::WEIGHTED);
 	}
 	br->align();
 

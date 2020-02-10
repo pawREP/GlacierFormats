@@ -5,25 +5,23 @@
 using namespace GlacierFormats;
 
 	CollisionData::CollisionData() {
-		throw; //TODO:What is this, why do i need it
+		throw; //TODO: Is this needed?
 	}
 
-	CollisionData::CollisionData(BinaryReader* br) {
-		auto base_offset = br->tell();
-		auto header_short = br->read<short>();
-		size_t size = 0x10;
-		if (header_short != 0)
-			size = 6 * static_cast<size_t>(header_short) + 4;
-
-		data_size = size;
-		data = std::make_unique<char[]>(size);
-		br->seek(base_offset);
-		br->read(data.get(), size);
-
+	CollisionData::CollisionData(BinaryReader* br, CollisionType type) : type(type) {
+		auto size = br->peek<uint16_t>();
+		if(type == CollisionType::STANDARD || type == CollisionType::WEIGHTED)
+			size = 6 * size + 4;
+		data.resize(size);
+		br->read(data.data(), size);
 		br->align();
 	}
 
-	void CollisionData::serialize(BinaryWriter* bw) {
-		bw->write(data.get(), data_size);
+	void CollisionData::serialize(BinaryWriter* bw) const {
+		if (type == CollisionType::STANDARD || type == CollisionType::WEIGHTED)
+			GLACIER_ASSERT_TRUE(*reinterpret_cast<const uint16_t*>(data.data()) == (data.size() - 4) / 6)
+		else
+			GLACIER_ASSERT_TRUE(*reinterpret_cast<const uint16_t*>(data.data()) == data.size());
+		bw->write(data.data(), data.size());
 		bw->align();
 	}
