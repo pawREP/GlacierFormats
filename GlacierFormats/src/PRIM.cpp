@@ -53,7 +53,8 @@ using namespace GlacierFormats;
 				primitives.push_back(std::move(prim));
 				break;
 			case SPrimObject::SUBTYPE_LINKED: // SUBTYPE_LINKED
-				throw UnsupportedFeatureException("SPrimObject::SUBTYPE_LINKED not supported");
+				prim = deserializer.deserializeLinkedMesh(&br, &prim_object_header);
+				primitives.push_back(std::move(prim));
 				break;
 			case SPrimObject::SUBTYPE_SPEEDTREE:
 				throw UnsupportedFeatureException("SPrimObject::SUBTYPE_SPEEDTREE not supported");

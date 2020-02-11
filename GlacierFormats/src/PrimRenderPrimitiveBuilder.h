@@ -31,7 +31,7 @@ namespace GlacierFormats {
 		void setCollisionBuffer(std::unique_ptr<CollisionData> collision);
 		void setLinkTable(std::unique_ptr<LinkTable> link_table);
 		void setClothData(std::unique_ptr<ClothData> collision);
-		void setBoneInfo(std::unique_ptr<BoneInfo> bone_info);
+		void setBoneInfo(std::unique_ptr<BoneIndices> bone_indices);
 		void setMUnkTabl2(std::unique_ptr<MUnkTabl2> m2);
 
 		void setPropertyFlags(SPrimObject::PROPERTY_FLAGS flags);

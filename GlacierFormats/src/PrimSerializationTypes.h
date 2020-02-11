@@ -89,10 +89,10 @@ namespace GlacierFormats {
 	};
 
 	struct SPrimMeshWeighted : public SPrimMesh {
-		unsigned int bone_info;
+		unsigned int bone_indices;
 		unsigned int num_copy_bones;
 		unsigned int copy_bones;
-		unsigned int bone_indices;
+		unsigned int bone_indices_;
 	};
 
 	struct SPrimSubMesh : SPrimObject {

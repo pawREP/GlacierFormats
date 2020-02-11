@@ -23,7 +23,7 @@ using namespace GlacierFormats;
 		collision_data = std::move(src.collision_data);
 		link_table = std::move(src.link_table);
 		cloth_data = std::move(src.cloth_data);
-		bone_info = std::move(src.bone_info);
+		bone_indices = std::move(src.bone_indices);
 		m_unk_tabl2 = std::move(src.m_unk_tabl2);
 	}
 
