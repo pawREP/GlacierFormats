@@ -243,10 +243,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeight
 
 	if (prim_submesh.collision) {
 		br->seek(prim_submesh.collision);
-		if(prim_mesh.sub_type == SPrimObject::SUBTYPE_LINKED)
-			prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::LINKED);
-		else
-			prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::WEIGHTED);
+		prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::WEIGHTED);
 	}
 	br->align();
 
@@ -273,7 +270,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeLinked
 	GLACIER_ASSERT_TRUE(prim_mesh.draw_destination == 0);
 	GLACIER_ASSERT_TRUE(prim_mesh.pack_type == 0);
 	GLACIER_ASSERT_TRUE(prim_mesh.type == SPrimObjectHeader::EPrimType::PTMESH);
-	//GLACIER_ASSERT_TRUE(prim_mesh.m_unk_tabl1_offset == 0); //TODO: TmUnkTabl1 is part of some linked meshes
+	//GLACIER_ASSERT_TRUE(prim_mesh.m_unk_tabl1_offset == 0); //TODO: TmUnkTabl1 is part of some linked meshes, implement
 
 	br->seek(prim_mesh.sub_mesh_table);
 	auto submesh_offset = br->read<uint32_t>();
@@ -311,10 +308,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeLinked
 
 	if (prim_submesh.collision) {
 		br->seek(prim_submesh.collision);
-		if (prim_mesh.sub_type == SPrimObject::SUBTYPE_LINKED)
-			prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::LINKED);
-		else
-			prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::WEIGHTED);
+		prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::LINKED);
 	}
 	br->align();
 
