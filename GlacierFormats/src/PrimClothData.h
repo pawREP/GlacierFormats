@@ -2,6 +2,7 @@
 #include "PrimSerializationTypes.h"
 #include <memory>
 #include <cinttypes>
+#include <vector>
 
 namespace GlacierFormats {
 
@@ -10,10 +11,7 @@ namespace GlacierFormats {
 
 	class ClothData
 	{
-		uint16_t size;
-		//uint16_t det;
-		uint32_t data_size;
-		std::unique_ptr<char[]> data;
+		std::vector<char> data;
 
 	public:
 		ClothData(BinaryReader* br, const SPrimSubMesh* prim_submesh);
