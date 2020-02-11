@@ -11,12 +11,12 @@ namespace GlacierFormats {
 	//Function not entirely clear, anim/rigging related acceleration struct ???
 	//Optional, can be dropped from primitives with seemingly no adverse effect. Small sample size. 
 
-	class BoneInfo
+	class BoneIndices
 	{
-		std::vector<char> data;
+		std::vector<uint8_t> data;
 
 	public:
-		BoneInfo(BinaryReader* br);
+		BoneIndices(BinaryReader* br);
 		void serialize(BinaryWriter* bw) const;
 	};
 
