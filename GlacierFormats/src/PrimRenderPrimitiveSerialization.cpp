@@ -9,17 +9,18 @@ using namespace GlacierFormats;
 	uint32_t RenderPrimitiveSerializer::serialize(BinaryWriter* bw, const ZRenderPrimitive* prim) {
 		SPrimSubMesh submesh{};
 
+		//Set inherited SPrimObject properties 
 		submesh.properties = prim->remnant.submesh_properties;
-		submesh.unk2 = -1;
 		submesh.num_uv_channels = 1;//TODO: Note multiple UV channels can now be supported when using the GLTF exchange format.
 
+		//Index Buffer
 		submesh.index_buffer = bw->tell();
 		submesh.num_indices = prim->index_buffer->size();
 		prim->index_buffer->serialize(bw);
 
+		//Vertex Buffer
 		submesh.vertex_buffer = bw->tell();
 		submesh.num_vertex = prim->vertex_buffer->size();
-
 		BoundingBox vertex_buffer_bb = prim->vertex_buffer->getBoundingBox();
 		for (int i = 0; i < 3; ++i) {
 			submesh.min[i] = vertex_buffer_bb.min[i];
@@ -27,9 +28,11 @@ using namespace GlacierFormats;
 		}
 		prim->vertex_buffer->serialize(bw);
 
+		//Vertex Weights
 		if (prim->bone_weight_buffer)
 			prim->bone_weight_buffer->serialize(bw);
 
+		//Per Vertex Data
 		float texture_scale[2];
 		float texture_bias[2];
 		prim->vertex_data->serialize(bw, texture_scale, texture_bias);
@@ -66,6 +69,7 @@ using namespace GlacierFormats;
 		bw->align();
 
 		uint32_t submesh_offset = static_cast<uint32_t>(bw->tell());
+		submesh.Assert();
 		bw->write(submesh);
 
 		//submesh table
@@ -114,9 +118,6 @@ using namespace GlacierFormats;
 		prim_mesh.bias = prim->remnant.bias;
 		prim_mesh.offset = prim->remnant.offset;
 		prim_mesh.material_id = prim->remnant.material_id;
-		prim_mesh.wire_color = prim->remnant.wire_color;
-		prim_mesh.unk2 = prim->remnant.unk2;
-		prim_mesh.unk17 = prim->remnant.unk17;
 
 		//TODO: Add bone stuff
 		uint32_t object_offset = static_cast<uint32_t>(bw->tell());
@@ -139,17 +140,19 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 	switch (br->peek<SPrimMesh>().sub_type) {
 	case SPrimObject::SUBTYPE::SUBTYPE_STANDARD:
 		prim_mesh = std::make_unique<SPrimMesh>(br->read<SPrimMesh>());
+		prim_mesh->Assert();
 		break;
 	case SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED:
 	case SPrimObject::SUBTYPE::SUBTYPE_LINKED:
 		prim_mesh = std::make_unique<SPrimMeshWeighted>(br->read<SPrimMeshWeighted>());
+		static_cast<SPrimMeshWeighted*>(prim_mesh.get())->Assert();
+		break;
+	default:
+		GLACIER_UNREACHABLE;
 	}
+
 	br->align();
 
-	GLACIER_ASSERT_TRUE(prim_mesh->draw_destination == 0);
-	GLACIER_ASSERT_TRUE(prim_mesh->pack_type == 0);
-	GLACIER_ASSERT_TRUE(prim_mesh->type == SPrimObjectHeader::EPrimType::PTMESH);
-	GLACIER_ASSERT_TRUE(prim_mesh->unk2 == 0);
 	if (prim_mesh->m_unk_tabl1_offset)
 		throw UnsupportedFeatureException("Mesh UnkTable1 not supported");
 
@@ -159,6 +162,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 
 	br->seek(submesh_offset);
 	auto prim_submesh = br->read<SPrimSubMesh>();
+	prim_submesh.Assert();
 
 	if (prim_submesh.num_uv_channels != 1)
 		throw UnsupportedFeatureException("Meshes with more than one UV channel are not supported.");

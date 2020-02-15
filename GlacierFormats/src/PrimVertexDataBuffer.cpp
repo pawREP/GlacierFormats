@@ -64,7 +64,7 @@ namespace {
 		//Experiment(br, prim_submesh->num_vertex);
 
 		for (size_t i = 0; i < prim_submesh->num_vertex; ++i) {
-
+			//TODO: Read complete blocks for performance
 
 			//Normal
 			//TODO: Consider switching to Vec<float, 3> normals, 4th term likely always .0f. Do scan of full repo to confirm. Would simplify mesh import a bit.

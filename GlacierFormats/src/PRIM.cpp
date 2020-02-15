@@ -11,7 +11,7 @@
 using namespace GlacierFormats;
 
 	PRIM::PRIM(RuntimeId id) : GlacierResource<PRIM>(id) {
-
+		//TODO: Initilize manifest?
 	}
 
 	PRIM::PRIM(BinaryReader& br, RuntimeId id) : GlacierResource<PRIM>(id) {
@@ -20,10 +20,17 @@ using namespace GlacierFormats;
 
 		br.seek(primary_offset);
 		SPrimObjectHeader prim_object_header = br.read<SPrimObjectHeader>();
+		prim_object_header.Assert();
+		GLACIER_ASSERT_TRUE(prim_object_header.type == SPrimHeader::EPrimType::PTOBJECTHEADER);
 
-		GLACIER_ASSERT_TRUE(prim_object_header.draw_destination == 0)
-		GLACIER_ASSERT_TRUE(prim_object_header.pack_type == 0)
-		GLACIER_ASSERT_TRUE(prim_object_header.type == SPrimHeader::PTOBJECTHEADER)
+		//SPrimObjectHeader should always be at the end of the resource file. The only exception are speedtree meshes which aren't supported.
+		//This test is not sufficient and could be avoided by simply not aligning but that would mess with the read coverage debug reader.
+		if(br.size() != br.tell() + 4)
+			throw UnsupportedFeatureException("SPrimObject::SUBTYPE_SPEEDTREE not supported");
+		br.align();
+
+		manifest.rig_index = prim_object_header.bone_rig_resource_index;
+		manifest.properties = prim_object_header.property_flags;
 
 		br.seek(prim_object_header.object_table);
 		std::vector<uint32_t> object_table;
@@ -31,42 +38,35 @@ using namespace GlacierFormats;
 			object_table.push_back(br.read<uint32_t>());
 		br.align();
 
-
+		//printf("%s\n", static_cast<std::string>(id).c_str());
 		for (const auto& object_offset : object_table) {
 			br.seek(object_offset);
 			auto object = br.read<SPrimObject>();
+			object.Assert();
+			GLACIER_ASSERT_TRUE(object.type == SPrimHeader::EPrimType::PTMESH);
 			br.seek(object_offset);
-
-			GLACIER_ASSERT_TRUE(object.draw_destination == 0)
-			GLACIER_ASSERT_TRUE(object.pack_type == 0)
-			GLACIER_ASSERT_TRUE(object.type == SPrimHeader::PTMESH)
 
 			RenderPrimitiveDeserializer deserializer;
 			std::unique_ptr<ZRenderPrimitive> prim = nullptr;
 			switch (object.sub_type) {
-			case SPrimObject::SUBTYPE_STANDARD:					
-				prim = deserializer.deserializeStandardMesh(&br, &prim_object_header);
+			case SPrimObject::SUBTYPE::SUBTYPE_STANDARD:		
+			case SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED:
+			case SPrimObject::SUBTYPE::SUBTYPE_LINKED:
+				prim = deserializer.deserializeMesh(&br, &prim_object_header);
 				primitives.push_back(std::move(prim));
 				break;
-			case SPrimObject::SUBTYPE_WEIGHTED:
-				prim = deserializer.deserializeWeightedMesh(&br, &prim_object_header);
-				primitives.push_back(std::move(prim));
-				break;
-			case SPrimObject::SUBTYPE_LINKED: // SUBTYPE_LINKED
-				prim = deserializer.deserializeLinkedMesh(&br, &prim_object_header);
-				primitives.push_back(std::move(prim));
-				break;
-			case SPrimObject::SUBTYPE_SPEEDTREE:
+			case SPrimObject::SUBTYPE::SUBTYPE_SPEEDTREE:
 				throw UnsupportedFeatureException("SPrimObject::SUBTYPE_SPEEDTREE not supported");
 				break;
 			default:
-				throw std::runtime_error("Invalid object.sub_type.");//Unreachable
+				GLACIER_UNREACHABLE;
 				break;
 			}
 		}
 	}
 
 	PRIM::PRIM(const std::vector<IMesh*>& meshes, RuntimeId id, std::function<void(ZRenderPrimitiveBuilder&, const std::string&)>* build_modifier) : GlacierResource<PRIM>(id) {
+		//TODO:Initilize manifest
 		for (const auto& mesh : meshes) {
 			ZRenderPrimitiveBuilder builder;
 			builder.initilizeFromIMesh(mesh);
@@ -114,14 +114,13 @@ using namespace GlacierFormats;
 		auto header_offset = bw.tell();
 		SPrimObjectHeader header{};
 
-		//TODO: some values are uninitialized or hard coded atm
+		//TODO: Hard coded values here have to be asserted during import. Maintainance hazard, write unified solution. 
 		header.draw_destination = 0;
 		header.pack_type = 0;
 		header.type = SPrimObjectHeader::EPrimType::PTOBJECTHEADER;
-		//header.bone_rig_resource_index = -1;//TODO: impl
-		header.bone_rig_resource_index = 0;//TODO: impl
-		//header.property_flags = SPrimObjectHeader::PROPERTY_FLAGS::HAS_FRAMES;//TODO: impl
-		header.property_flags = (SPrimObjectHeader::PROPERTY_FLAGS)267;//TODO: impl
+
+		header.bone_rig_resource_index = manifest.rig_index;//TODO: Build from primitve info.
+		header.property_flags = manifest.properties;
 
 		header.num_objects = object_table.size();
 		header.object_table = object_table_offset;
@@ -136,6 +135,7 @@ using namespace GlacierFormats;
 			header.max[i] = bb.max[i];
 		}
 
+		header.Assert();
 		bw.write(header);
 		bw.align();
 

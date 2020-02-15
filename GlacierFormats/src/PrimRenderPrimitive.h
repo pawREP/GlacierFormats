@@ -46,7 +46,7 @@ namespace GlacierFormats {
 			char offset = 0;
 			short material_id = 0;
 			int wire_color = 0;
-			int unk2 = 0;
+			int debug_color = 0;
 			float unk17 = 0;
 		} remnant;
 
