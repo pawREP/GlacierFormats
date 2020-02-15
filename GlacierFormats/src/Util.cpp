@@ -3,6 +3,18 @@
 #include "BORG.h"
 #include <regex>
 
+//Dev only function. Returns hash usd for install-time resource identification
+uint32_t GlacierFormats::Util::meshInstallDebugHookHash(RuntimeId id) {
+	//Bad hash because I was too lazy to write anything else in assembly
+	auto repo = ResourceRepository::instance();
+	std::unique_ptr<char[]> data;
+	auto data_size = repo->getResource(id, data);
+	uint32_t hash = 0;
+	for (int i = 0; i < data_size / 4; ++i)
+		hash ^= reinterpret_cast<uint32_t*>(data.get())[i];
+	return hash;
+}
+
 std::unordered_map<std::string, int> GlacierFormats::Util::getBoneMapping(RuntimeId prim_id) {
 	auto repo = ResourceRepository::instance();
 	auto borg_ref = repo->getResourceReferences(prim_id, "BORG");

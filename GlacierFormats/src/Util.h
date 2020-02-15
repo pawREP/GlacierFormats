@@ -13,6 +13,8 @@ namespace GlacierFormats {
 
 	namespace Util {
 
+		uint32_t meshInstallDebugHookHash(RuntimeId id);
+
 		//Returns the mapping between bone names and bone ids of the rig used by the 
 		//PRIM specified by the Runtime id argument.
 		//Returns an empty map if the prim id doesn't exist or if it doesn't reference a BORG.
