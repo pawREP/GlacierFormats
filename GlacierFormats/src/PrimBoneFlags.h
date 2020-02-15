@@ -7,13 +7,13 @@ namespace GlacierFormats {
 	class BinaryReader;
 	class BinaryWriter;
 
-	class BoneFlags
+	class VertexColors
 	{
 	public:
 		std::vector<unsigned char> flags;
 
-		explicit BoneFlags(int size) noexcept;
-		BoneFlags(BinaryReader* br, const SPrimSubMesh* prim_submesh);
+		explicit VertexColors(int size) noexcept;
+		VertexColors(BinaryReader* br, const SPrimSubMesh* prim_submesh);
 		void serialize(BinaryWriter* bw) const;
 	};
 }
