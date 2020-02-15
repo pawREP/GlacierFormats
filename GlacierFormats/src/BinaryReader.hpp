@@ -121,6 +121,8 @@ namespace GlacierFormats {
 			source = std::make_unique<BinaryReaderBufferSource>(std::move(data), data_size);
 		}
 
+		BinaryReader(std::unique_ptr<IBinaryReaderSource> source) : source(std::move(source)) {};
+
 		~BinaryReader() {
 			int a = 0;
 		}
