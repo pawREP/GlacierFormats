@@ -14,7 +14,7 @@ namespace GlacierFormats {
 		std::vector<char> data;
 
 	public:
-		ClothData(BinaryReader* br, const SPrimSubMesh* prim_submesh);
+		ClothData(BinaryReader* br, const SPrimSubMesh* prim_submesh, const SPrimMesh* prim_mesh);
 		void serialize(BinaryWriter* bw);
 	};
 
