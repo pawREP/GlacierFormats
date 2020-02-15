@@ -16,9 +16,7 @@ namespace GlacierFormats {
 
 	class RenderPrimitiveDeserializer {
 	public:
-		std::unique_ptr<ZRenderPrimitive> deserializeStandardMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header);
-		std::unique_ptr<ZRenderPrimitive> deserializeWeightedMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header);
-		std::unique_ptr<ZRenderPrimitive> deserializeLinkedMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header);
+		std::unique_ptr<ZRenderPrimitive> deserializeMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header);
 	};
 
 }
