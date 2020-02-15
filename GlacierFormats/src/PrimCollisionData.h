@@ -19,13 +19,9 @@ namespace GlacierFormats {
 
 	class CollisionData {
 	public:
-		//Meshes of different subtype use different de/serialization logic.
-
-
 		std::vector<char> data;
 		CollisionType type;
 			
-		CollisionData();
 		CollisionData(BinaryReader* br, CollisionType type);
 		void serialize(BinaryWriter* bw) const;
 	};
