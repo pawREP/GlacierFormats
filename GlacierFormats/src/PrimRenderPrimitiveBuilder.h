@@ -27,7 +27,7 @@ namespace GlacierFormats {
 		void setIndexBuffer(std::unique_ptr<IndexBuffer> index_buffer);
 		void setVertexDataBuffer(std::unique_ptr<VertexDataBuffer> vertex_data_buffer);
 		void setBoneWeightBuffer(std::unique_ptr<BoneWeightBuffer> boneweight_buffer);
-		void setBoneFlags(std::unique_ptr<BoneFlags> bone_flags);
+		void setBoneFlags(std::unique_ptr<VertexColors> vertex_colors);
 		void setCollisionBuffer(std::unique_ptr<CollisionData> collision);
 		void setLinkTable(std::unique_ptr<LinkTable> link_table);
 		void setClothData(std::unique_ptr<ClothData> collision);

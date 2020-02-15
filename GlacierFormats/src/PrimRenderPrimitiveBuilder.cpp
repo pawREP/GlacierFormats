@@ -77,8 +77,8 @@ using namespace GlacierFormats;
 		prim->bone_weight_buffer = std::move(boneweight_buffer);
 	}
 
-	void ZRenderPrimitiveBuilder::setBoneFlags(std::unique_ptr<BoneFlags> bone_flags) {
-		prim->bone_flags = std::move(bone_flags);
+	void ZRenderPrimitiveBuilder::setBoneFlags(std::unique_ptr<VertexColors> vertex_colors) {
+		prim->vertex_colors = std::move(vertex_colors);
 	}
 
 	void ZRenderPrimitiveBuilder::setClothData(std::unique_ptr<ClothData> cloth_data) {
@@ -94,7 +94,7 @@ using namespace GlacierFormats;
 	}
 
 	void ZRenderPrimitiveBuilder::setPropertyFlags(SPrimObject::PROPERTY_FLAGS flags) {
-		prim->remnant.properties = flags;
+		prim->remnant.submesh_properties = flags;
 	}
 
 	void ZRenderPrimitiveBuilder::setLodMask(unsigned char lod_mask) {
