@@ -30,7 +30,9 @@ namespace GlacierFormats {
 		//TODO: remnant should be exported into a manifest or embeded into the expoted mesh. Current implementation relys on reading 
 		//some of the remnant data from the ResourceRepo, or the props are guessed.
 		struct {
-			SPrimObject::PROPERTY_FLAGS properties = static_cast<SPrimObject::PROPERTY_FLAGS>(0);
+			SPrimObject::SUBTYPE mesh_subtype = static_cast<SPrimObject::SUBTYPE>(0);
+			SPrimObject::PROPERTY_FLAGS submesh_properties = static_cast<SPrimObject::PROPERTY_FLAGS>(0);
+			SPrimObject::PROPERTY_FLAGS mesh_properties = static_cast<SPrimObject::PROPERTY_FLAGS>(0);
 			//For exporting the only relevant property is PROPERTY_COLOR1. Which has to be set on export for meshes that
 			//natively use this property. Otherwise meshes will appear in-game in a weird purple color. 
 
@@ -53,7 +55,7 @@ namespace GlacierFormats {
 		std::unique_ptr<IndexBuffer> index_buffer;
 		std::unique_ptr<VertexDataBuffer> vertex_data;
 		std::unique_ptr<BoneWeightBuffer> bone_weight_buffer;
-		std::unique_ptr<BoneFlags> bone_flags;
+		std::unique_ptr<VertexColors> vertex_colors;
 		std::unique_ptr<CollisionData> collision_data;
 		std::unique_ptr<LinkTable> link_table;
 		std::unique_ptr<ClothData> cloth_data;
