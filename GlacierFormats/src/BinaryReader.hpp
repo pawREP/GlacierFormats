@@ -191,11 +191,11 @@ namespace GlacierFormats {
 			uint64_t padding_len = (alignment - pos) % alignment;
 			read(zero, padding_len);
 
-			auto sum = 0;
-			for (int i = 0; i < padding_len; ++i)
-				sum += zero[i];
+			auto it = std::find_if(std::begin(zero), &zero[padding_len], [](const char& c) { return c != 0; });
 
-			GLACIER_ASSERT_TRUE(("BinaryReader, invalid padding error", sum == 0));
+			GLACIER_ASSERT_TRUE(("BinaryReader, invalid padding error", it == &zero[padding_len]));
+		}
+
 		}
 	};
 }
