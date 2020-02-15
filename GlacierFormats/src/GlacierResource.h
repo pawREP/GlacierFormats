@@ -5,6 +5,7 @@
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 #include "GlacierTypes.h"
+#include "Debug.h"
 
 namespace GlacierFormats {
 
@@ -22,6 +23,10 @@ namespace GlacierFormats {
 		RuntimeId id;
 
 		virtual std::string name() const;
+
+		static std::unique_ptr<T> read(BinaryReader& br, RuntimeId id) {
+			return std::make_unique<T>(br, id);
+		}
 
 		static std::unique_ptr<T> readFromFile(const std::filesystem::path& file_path, RuntimeId id = 0) {
 			if(!id)
