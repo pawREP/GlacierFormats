@@ -10,11 +10,13 @@ using namespace GlacierFormats;
 	}
 
 	IndexBuffer::IndexBuffer(BinaryReader* br, const SPrimSubMesh* prim_submesh) {
-		indices.resize(prim_submesh->num_indices);
+		auto num_indices = prim_submesh->num_indices + prim_submesh->num_indices_ex;
+		indices.resize(num_indices);
 		br->read(indices.data(), indices.size());
 	}
 
 	void IndexBuffer::serialize(BinaryWriter* bw) {
+		//TODO: Warn about large buffers and/or use index buffer extension. Needs more research, requirements for split index buffer unknown. 
 		bw->write(indices.data(), indices.size());
 		bw->align();
 	}
