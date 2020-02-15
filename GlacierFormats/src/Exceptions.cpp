@@ -26,3 +26,7 @@ GlacierFormats::InvalidArgumentsException::InvalidArgumentsException(const std::
 const char* GlacierFormats::InvalidArgumentsException::what() const {
 	return msg.c_str();
 }
+
+const char* GlacierFormats::UnreachableException::what() const {
+	return "Tried to execute unreachable code path";
+}
