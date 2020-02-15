@@ -33,7 +33,7 @@ namespace GlacierFormats {
 			ifs.open(path, std::ios::binary);
 		}
 
-		void read(char* dst, int64_t len) override final {
+		void read(char* dst, int64_t len) override {
 			ifs.read(dst, len);
 		}
 
@@ -76,7 +76,7 @@ namespace GlacierFormats {
 			cur = 0;
 		}
 
-		void read(char* dst, int64_t len) override final {
+		void read(char* dst, int64_t len) override {
 			if (cur + len > buffer_size)
 				throw InvalidArgumentsException("Out of bounds read");
 			memcpy_s(dst, len, &(read_buffer[cur]), len);
@@ -96,6 +96,36 @@ namespace GlacierFormats {
 		int64_t size() const override final {
 			return buffer_size;
 		}
+	};
+
+	template<typename Source>
+	class LoggedBinaryReaderSource : public Source {
+		static_assert(std::is_base_of_v<IBinaryReaderSource, Source>);
+
+	public:
+		std::vector<char> access_pattern;
+
+		template<typename... Args>
+		LoggedBinaryReaderSource(Args&&... args) : Source(std::forward<Args>(args)...) {
+			access_pattern.resize(Source::size(), 0);
+		}
+
+		void read(char* dst, int64_t len) override final {
+			auto cur = Source::tell();
+			Source::read(dst, len);
+			for (int i = cur; i < cur + len; ++i)
+				access_pattern[i]++;
+		}
+
+		const std::vector<char>& getAccessPattern() const {
+			return access_pattern;
+		}
+
+		float converage() const {
+			auto read_count = std::count_if(access_pattern.begin(), access_pattern.end(), [](const char& c) { return c != 0; });
+			return static_cast<float>(read_count) / static_cast<float>(access_pattern.size());
+		}
+
 	};
 
 	class BinaryReader {
