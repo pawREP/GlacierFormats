@@ -196,6 +196,8 @@ namespace GlacierFormats {
 			GLACIER_ASSERT_TRUE(("BinaryReader, invalid padding error", it == &zero[padding_len]));
 		}
 
+		const IBinaryReaderSource* getSource() const {
+			return source.get();
 		}
 	};
 }
