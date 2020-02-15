@@ -5,6 +5,7 @@ namespace GlacierFormats {
 #pragma pack(push,1)
 	struct SPrimHeader {
 		enum EPrimType : short {
+		enum class EPrimType : short {
 			PTOBJECTHEADER = 1,
 			PTMESH = 2,
 			PTSHAPE = 5,
@@ -21,6 +22,7 @@ namespace GlacierFormats {
 
 	struct SPrimObjectHeader : public SPrims {
 		enum PROPERTY_FLAGS {
+		enum class PROPERTY_FLAGS {
 			HAS_BONES = 0x01,
 			HAS_FRAMES = 0x02,
 			IS_LINKED_OBJECT = 0x04,
@@ -47,6 +49,7 @@ namespace GlacierFormats {
 			SUBTYPE_STANDARDUV3 = 4,
 			SUBTYPE_STANDARDUV4 = 5,
 			SUBTYPE_SPEEDTREE = 6,
+		enum class SUBTYPE : char {
 		};
 
 		enum class PROPERTY_FLAGS : char {

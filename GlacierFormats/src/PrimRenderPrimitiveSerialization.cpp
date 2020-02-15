@@ -121,7 +121,7 @@ using namespace GlacierFormats;
 		//TODO: Add bone stuff
 		uint32_t object_offset = static_cast<uint32_t>(bw->tell());
 
-		if ((prim->remnant.mesh_subtype == SPrimObject::SUBTYPE_WEIGHTED) || (prim->remnant.mesh_subtype == SPrimObject::SUBTYPE_LINKED)) {
+		if ((prim->remnant.mesh_subtype == SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED) || (prim->remnant.mesh_subtype == SPrimObject::SUBTYPE::SUBTYPE_LINKED)) {
 			bw->write(prim_mesh);
 		}
 		else {
@@ -134,14 +134,14 @@ using namespace GlacierFormats;
 		return object_offset;
 	}
 
-std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeightedMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header) {
+std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(BinaryReader* br, const SPrimObjectHeader* const prim_object_header) {
 	std::unique_ptr<SPrimMesh> prim_mesh = nullptr;
 	switch (br->peek<SPrimMesh>().sub_type) {
-	case SPrimObject::SUBTYPE_STANDARD:
+	case SPrimObject::SUBTYPE::SUBTYPE_STANDARD:
 		prim_mesh = std::make_unique<SPrimMesh>(br->read<SPrimMesh>());
 		break;
-	case SPrimObject::SUBTYPE_WEIGHTED:
-	case SPrimObject::SUBTYPE_LINKED:
+	case SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED:
+	case SPrimObject::SUBTYPE::SUBTYPE_LINKED:
 		prim_mesh = std::make_unique<SPrimMeshWeighted>(br->read<SPrimMeshWeighted>());
 	}
 	br->align();
@@ -149,6 +149,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeight
 	GLACIER_ASSERT_TRUE(prim_mesh->draw_destination == 0);
 	GLACIER_ASSERT_TRUE(prim_mesh->pack_type == 0);
 	GLACIER_ASSERT_TRUE(prim_mesh->type == SPrimObjectHeader::EPrimType::PTMESH);
+	GLACIER_ASSERT_TRUE(prim_mesh->unk2 == 0);
 	if (prim_mesh->m_unk_tabl1_offset)
 		throw UnsupportedFeatureException("Mesh UnkTable1 not supported");
 
@@ -181,14 +182,16 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeight
 	//Vertex buffer
 	br->seek(prim_submesh.vertex_buffer);
 	prim->vertex_buffer = std::make_unique<VertexBuffer>(br, prim_object_header, prim_mesh.get(), &prim_submesh);
-	if(prim_mesh->sub_type == SPrimObject::SUBTYPE_WEIGHTED)
+
+	//Vertex weights
+	if(prim_mesh->sub_type == SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED)
 		prim->bone_weight_buffer = std::make_unique<BoneWeightBuffer>(br, &prim_submesh);
 	
 	//Per vertex data (normals, uv, ...)
 	prim->vertex_data = std::make_unique<VertexDataBuffer>(br, prim_mesh.get(), &prim_submesh);
 	
 	//Vertex colors
-	if (prim_mesh->sub_type == SPrimObject::SUBTYPE_WEIGHTED)
+	if (prim_mesh->sub_type == SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED)
 		prim->vertex_colors = std::make_unique<VertexColors>(br, &prim_submesh);
 	else if (((int)prim_submesh.properties & (int)SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1) == 0)
 		prim->vertex_colors = std::make_unique<VertexColors>(br, &prim_submesh);
@@ -204,11 +207,11 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeight
 	if (prim_submesh.collision) {
 		br->seek(prim_submesh.collision);
 		switch (prim_mesh->sub_type) {
-		case SPrimObject::SUBTYPE_STANDARD:
-		case SPrimObject::SUBTYPE_WEIGHTED:
+		case SPrimObject::SUBTYPE::SUBTYPE_STANDARD:
+		case SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED:
 				prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::STANDARD);
 				break;
-		case SPrimObject::SUBTYPE_LINKED:
+		case SPrimObject::SUBTYPE::SUBTYPE_LINKED:
 				prim->collision_data = std::make_unique<CollisionData>(br, CollisionType::LINKED);
 				break;
 		}
@@ -216,7 +219,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeWeight
 	br->align();
 
 	//Bone indices
-	if (prim_mesh->sub_type != SPrimObject::SUBTYPE_STANDARD) {
+	if (prim_mesh->sub_type != SPrimObject::SUBTYPE::SUBTYPE_STANDARD) {
 		auto prim_mesh_weigthed = reinterpret_cast<SPrimMeshWeighted*>(prim_mesh.get());
 		if (prim_mesh_weigthed->bone_indices) {
 			br->seek(prim_mesh_weigthed->bone_indices);

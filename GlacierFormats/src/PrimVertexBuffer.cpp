@@ -19,7 +19,7 @@ using namespace GlacierFormats;
 	}
 
 	VertexBuffer::VertexBuffer(BinaryReader* br, const SPrimObjectHeader* prim_object_header, const SPrimMesh* prim_mesh, const SPrimSubMesh* prim_submesh) {
-		if ((prim_object_header->property_flags & SPrimObjectHeader::PROPERTY_FLAGS::HAS_HIRES_POSITIONS) == 0) {
+		if (((int)prim_object_header->property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_HIRES_POSITIONS) == 0) {
 			vertices.resize(prim_submesh->num_vertex);
 			for (int i = 0; i < prim_submesh->num_vertex; ++i) {
 				vertices[i].x() = (static_cast<float>(br->read<short>())* prim_mesh->pos_scale[0] / 32767.0 + prim_mesh->pos_bias[0]);
