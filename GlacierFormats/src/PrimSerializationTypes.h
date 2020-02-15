@@ -66,19 +66,27 @@ namespace GlacierFormats {
 		char bias;
 		char offset;
 		short material_id;
-		int wire_color;
+		int wire_color; //color used by wire-frame debug render.
 		int unk2;
 		float min[3];
 		float max[3];
 	};
 
 	struct SPrimMesh : public SPrimObject {
+
+		enum class CLOTH_FLAGS {
+			//...
+			USE_SMOLL_CLOTH_BLOCK = 0x80 //When set, indicates that the submesh uses the small cloth block variant instead
+										 // of the large, 0x14 bytes per vertex one. Check PrimClothData.cpp for details.
+			//...
+		};
+
 		int sub_mesh_table;
 		float pos_scale[4];
 		float pos_bias[4];
 		float uv_scale[2];
 		float uv_bias[2];
-		int unk16;
+		CLOTH_FLAGS cloth_flags;
 		float unk17;
 		int m_unk_tabl1_offset;
 		int m_unk_tabl2_offset;
@@ -99,7 +107,7 @@ namespace GlacierFormats {
 		int num_vertex;
 		int vertex_buffer;
 		int num_indices;
-		int unkown;
+		int num_indices_ex;//Number of additional indices in index buffer extension. 
 		int index_buffer;
 		int collision;
 		int cloth;
