@@ -18,10 +18,12 @@ using namespace GlacierFormats;
 	}
 
 	void CollisionData::serialize(BinaryWriter* bw) const {
-		if (type == CollisionType::STANDARD || type == CollisionType::WEIGHTED)
-			GLACIER_ASSERT_TRUE(*reinterpret_cast<const uint16_t*>(data.data()) == (data.size() - 4) / 6)
-		else
+		if (type == CollisionType::STANDARD || type == CollisionType::WEIGHTED) {
+			GLACIER_ASSERT_TRUE(*reinterpret_cast<const uint16_t*>(data.data()) == (data.size() - 4) / 6);
+		}
+		else {
 			GLACIER_ASSERT_TRUE(*reinterpret_cast<const uint16_t*>(data.data()) == data.size());
+		}
 		bw->write(data.data(), data.size());
 		bw->align();
 	}
