@@ -19,7 +19,7 @@ using namespace GlacierFormats;
 		index_buffer = std::move(src.index_buffer);
 		vertex_data = std::move(src.vertex_data);
 		bone_weight_buffer = std::move(src.bone_weight_buffer);
-		bone_flags = std::move(src.bone_flags);
+		vertex_colors = std::move(src.vertex_colors);
 		collision_data = std::move(src.collision_data);
 		link_table = std::move(src.link_table);
 		cloth_data = std::move(src.cloth_data);
