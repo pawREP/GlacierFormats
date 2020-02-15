@@ -22,6 +22,8 @@ namespace GlacierFormats {
 		operator uint64_t() const { return id; }
 		operator std::string() const {
 			std::stringstream ss;
+			ss << std::setw(0x10);
+			ss << std::setfill('0');
 			ss << std::hex;
 			ss << id;
 			return ss.str();
