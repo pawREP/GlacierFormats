@@ -1,4 +1,4 @@
-#include "PrimBoneFlags.h"
+#include "PrimVertexColors.h"
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 

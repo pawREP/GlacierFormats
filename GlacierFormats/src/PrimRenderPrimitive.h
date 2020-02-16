@@ -9,7 +9,7 @@
 #include "PrimCopyBones.h"
 #include "PrimVertexDataBuffer.h"
 #include "BoneWeightBuffer.h"
-#include "PrimBoneFlags.h"
+#include "PrimVertexColors.h"
 #include "PrimBoneInfo.h"
 #include "PrimBoneIndices.h"
 #include "IMesh.h"
