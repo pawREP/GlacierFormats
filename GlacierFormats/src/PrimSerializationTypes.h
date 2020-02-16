@@ -38,26 +38,34 @@ namespace GlacierFormats {
 
 	struct SPrimObjectHeader : public SPrims {
 		enum class PROPERTY_FLAGS {
-			HAS_BONES = 0x01,
-			HAS_FRAMES = 0x02,
-			IS_LINKED_OBJECT = 0x04,
-			IS_WEIGHTED_OBJECT = 0x08,
+			HAS_BONES = 0x01,			//
+			HAS_FRAMES = 0x02,			//Allways set. (Except for speedtree meshes)
+			IS_LINKED_OBJECT = 0x04,	//Set for linkend objects
+			IS_WEIGHTED_OBJECT = 0x08,	//Set for weighted objects
 			USE_BOUNDS = 0x0100,
 			HAS_HIRES_POSITIONS = 0x0200,
 		};
 
 		PROPERTY_FLAGS property_flags;	//Properties
-		int bone_rig_resource_index;	//Index of BORG resource. Either -1 or 0. There are no meshes with multple BORG resources. (TODO: Needs verification by full scan.)
+		int bone_rig_resource_index;	//Index of BORG resource. 0 if PROPERTY_FLAGS::IS_WEIGHTED_OBJECT is set. 0 if not linked or weighted flags are set. Linked, 0 or -1?
 		int num_objects;				//Number of mesh objects in the object table
 		int object_table;				//Offset to table of mesh objects
 		float min[3];					//Global bounding box min
 		float max[3];					//Global bounding box max
 
 		void Assert() {
-			if ((type == EPrimType::PTMESH))
-				GLACIER_ASSERT_TRUE(bone_rig_resource_index == 0)
-			else
-				GLACIER_ASSERT_TRUE(bone_rig_resource_index == -1)
+			if (((int)property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_WEIGHTED_OBJECT) == (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_WEIGHTED_OBJECT) {
+				GLACIER_ASSERT_TRUE(bone_rig_resource_index == 0);
+			}
+			else if (((int)property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_LINKED_OBJECT) == (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_LINKED_OBJECT) {
+				//printf("%d\n", bone_rig_resource_index);
+			}
+			else {
+				GLACIER_ASSERT_TRUE(bone_rig_resource_index == -1);
+			}
+
+			GLACIER_ASSERT_TRUE(((int)property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_FRAMES) == (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_FRAMES);
+
 			GLACIER_ASSERT_TRUE(num_objects > 0);
 			GLACIER_ASSERT_TRUE(object_table != 0);
 			SPrims::Assert();
@@ -78,7 +86,7 @@ namespace GlacierFormats {
 
 		enum class PROPERTY_FLAGS : char {
 			NONE = 0,
-			PROPERTY_XAXISLOCKED = 0x01,		//The axis lock flags are presumably used for decal meshes. Needs a bit more rsearch though. 
+			PROPERTY_XAXISLOCKED = 0x01,		//The axis lock colors are presumably used for decal meshes. Needs a bit more rsearch though. 
 			PROPERTY_YAXISLOCKED = 0x02,
 			PROPERTY_ZAXISLOCKED = 0x04,
 			PROPERTY_HIRES_POSITIONS = 0x08,	//Set for meshes that use 32 bit precision position data, instead of the default 16 bit precision.
@@ -149,6 +157,7 @@ namespace GlacierFormats {
 			);
 			if(num_copy_bones)
 				GLACIER_ASSERT_TRUE(copy_bones);
+
 			SPrimMesh::Assert();
 		}
 	};
