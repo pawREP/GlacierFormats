@@ -6,6 +6,7 @@
 #include "PrimCollisionData.h"
 #include "PrimBoundingBox.h"
 #include "PrimClothData.h"
+#include "PrimCopyBones.h"
 #include "PrimVertexDataBuffer.h"
 #include "BoneWeightBuffer.h"
 #include "PrimBoneFlags.h"
@@ -57,8 +58,9 @@ namespace GlacierFormats {
 		std::unique_ptr<VertexColors> vertex_colors;
 		std::unique_ptr<CollisionData> collision_data;
 		std::unique_ptr<ClothData> cloth_data;
+		std::unique_ptr<CopyBones> copy_bones;
+		std::unique_ptr<BoneInfo> bone_info;
 		std::unique_ptr<BoneIndices> bone_indices;
-		std::unique_ptr<MUnkTabl2> m_unk_tabl2;
 
 		ZRenderPrimitive(ZRenderPrimitive&&);
 

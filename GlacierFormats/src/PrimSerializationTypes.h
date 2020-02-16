@@ -128,19 +128,19 @@ namespace GlacierFormats {
 		float uv_scale[2];			//Scale used to decompress uv coordinates
 		float uv_bias[2];			//Bias used to decompress uv coordinates
 		CLOTH_FLAGS cloth_flags;	//Bitfield used for cloth properties. 
-		int unk17;					//Unknown. Only non-zero in meshes that have an MUnkTabl1 entry. Only in meshes with LINKED subtype
-		int m_unk_tabl1_offset;
-		int m_unk_tabl2_offset;
+		//int unk17;					//Unknown. Only non-zero in meshes that have an MUnkTabl1 entry. Only in meshes with LINKED subtype
+		//int m_unk_tabl1_offset;
+		//int m_unk_tabl2_offset;
 
 		void Assert() {
 			//Assert own members
-			if (sub_type != SUBTYPE::SUBTYPE_LINKED) {
-				GLACIER_ASSERT_TRUE(unk17 == 0);
-				GLACIER_ASSERT_TRUE(m_unk_tabl1_offset == 0);
-			}
-			if (sub_type != SUBTYPE::SUBTYPE_WEIGHTED)
-				GLACIER_ASSERT_TRUE(m_unk_tabl2_offset == 0);
-			GLACIER_ASSERT_TRUE(sub_mesh_table != 0);
+			//if (sub_type != SUBTYPE::SUBTYPE_LINKED) {
+			//	GLACIER_ASSERT_TRUE(unk17 == 0);
+			//	GLACIER_ASSERT_TRUE(m_unk_tabl1_offset == 0);
+			//}
+			//if (sub_type != SUBTYPE::SUBTYPE_WEIGHTED)
+			//	GLACIER_ASSERT_TRUE(m_unk_tabl2_offset == 0);
+			//GLACIER_ASSERT_TRUE(sub_mesh_table != 0);
 
 			//Assert SPrimHeader members
 			GLACIER_ASSERT_TRUE(type == SPrimHeader::EPrimType::PTMESH);
@@ -150,10 +150,10 @@ namespace GlacierFormats {
 	};
 
 	struct SPrimMeshWeighted : public SPrimMesh {
-		unsigned int bone_indices;
 		unsigned int num_copy_bones;
 		unsigned int copy_bones;
-		unsigned int bone_indices_;
+		unsigned int bone_indices;
+		unsigned int bone_info;
 
 		void Assert() {
 			//Assert SPrimObject members;

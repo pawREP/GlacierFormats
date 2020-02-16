@@ -9,13 +9,13 @@ namespace GlacierFormats {
 	//Unkown function
 	//Can be dropped without adverse effects. (Tested with small sample size).
 
-	class MUnkTabl2
+	class BoneIndices
 	{
 		uint32_t data_size;
 		std::unique_ptr<uint16_t[]> data;
 
 	public:
-		MUnkTabl2(BinaryReader* br);
+		BoneIndices(BinaryReader* br);
 		void serialize(BinaryWriter* bw);
 	};
 

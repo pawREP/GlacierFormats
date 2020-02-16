@@ -79,16 +79,16 @@ using namespace GlacierFormats;
 
 		SPrimMeshWeighted prim_mesh{};
 
-		if (prim->bone_indices) {
-			prim_mesh.bone_indices = bw->tell();
-			prim->bone_indices->serialize(bw);
+		if (prim->bone_info) {
+			prim_mesh.num_copy_bones = bw->tell();
+			prim->bone_info->serialize(bw);
 		}
 		bw->align();
 
-		if (prim->m_unk_tabl2) {
-			prim_mesh.m_unk_tabl2_offset = bw->tell();
-			prim->m_unk_tabl2->serialize(bw);
-		}
+		//if (prim->m_unk_tabl2) {
+		//	prim_mesh.m_unk_tabl2_offset = bw->tell();
+		//	prim->m_unk_tabl2->serialize(bw);
+		//}
 		bw->align();
 
 		prim_mesh.sub_mesh_table = submesh_table_offset;
@@ -153,8 +153,8 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 
 	br->align();
 
-	if (prim_mesh->m_unk_tabl1_offset)
-		throw UnsupportedFeatureException("Mesh UnkTable1 not supported");
+	//if (prim_mesh->)
+	//	throw UnsupportedFeatureException("Mesh UnkTable1 not supported");
 
 	br->seek(prim_mesh->sub_mesh_table);
 	auto submesh_offset = br->read<uint32_t>();
@@ -225,18 +225,28 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 	//Bone indices
 	if (prim_mesh->sub_type != SPrimObject::SUBTYPE::SUBTYPE_STANDARD) {
 		auto prim_mesh_weigthed = reinterpret_cast<SPrimMeshWeighted*>(prim_mesh.get());
+		if (prim_mesh_weigthed->num_copy_bones) {
+			GLACIER_ASSERT_TRUE(prim_mesh_weigthed->copy_bones);
+			br->seek(prim_mesh_weigthed->copy_bones);
+			prim->copy_bones = std::make_unique<CopyBones>(br, prim_mesh_weigthed->num_copy_bones);
+		}
+
+		if (prim_mesh_weigthed->bone_info) {
+			br->seek(prim_mesh_weigthed->bone_info);
+			prim->bone_info = std::make_unique<BoneInfo>(br);
+		}
+		br->align();
+
+		//MUnkTabl2
 		if (prim_mesh_weigthed->bone_indices) {
 			br->seek(prim_mesh_weigthed->bone_indices);
 			prim->bone_indices = std::make_unique<BoneIndices>(br);
 		}
-		br->align();
+
+
 	}
 
-	//MUnkTabl2
-	if (prim_mesh->m_unk_tabl2_offset) {
-		br->seek(prim_mesh->m_unk_tabl2_offset);
-		prim->m_unk_tabl2 = std::make_unique<MUnkTabl2>(br);
-	}
+
 	br->align();
 
 	return prim;

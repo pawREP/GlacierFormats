@@ -30,8 +30,8 @@ namespace GlacierFormats {
 		void setBoneFlags(std::unique_ptr<VertexColors> vertex_colors);
 		void setCollisionBuffer(std::unique_ptr<CollisionData> collision);
 		void setClothData(std::unique_ptr<ClothData> collision);
-		void setBoneInfo(std::unique_ptr<BoneIndices> bone_indices);
-		void setMUnkTabl2(std::unique_ptr<MUnkTabl2> m2);
+		void setBoneInfo(std::unique_ptr<BoneInfo> bone_info);
+		void setBoneIndices(std::unique_ptr<BoneIndices> m2);
 
 		void setPropertyFlags(SPrimObject::PROPERTY_FLAGS flags);
 		void setLodMask(unsigned char lod_mask);

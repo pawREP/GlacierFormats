@@ -81,12 +81,12 @@ using namespace GlacierFormats;
 		prim->cloth_data = std::move(cloth_data);
 	}
 
-	void ZRenderPrimitiveBuilder::setBoneInfo(std::unique_ptr<BoneIndices> bone_indices) {
-		prim->bone_indices = std::move(bone_indices);
+	void ZRenderPrimitiveBuilder::setBoneInfo(std::unique_ptr<BoneInfo> bone_info) {
+		prim->bone_info = std::move(bone_info);
 	}
 
-	void ZRenderPrimitiveBuilder::setMUnkTabl2(std::unique_ptr<MUnkTabl2> m2) {
-		prim->m_unk_tabl2 = std::move(m2);
+	void ZRenderPrimitiveBuilder::setBoneIndices(std::unique_ptr<BoneIndices> bone_indices) {
+		prim->bone_indices = std::move(bone_indices);
 	}
 
 	void ZRenderPrimitiveBuilder::setPropertyFlags(SPrimObject::PROPERTY_FLAGS flags) {
