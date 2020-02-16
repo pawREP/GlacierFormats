@@ -45,9 +45,7 @@ namespace GlacierFormats {
 			memset(data_, 0, size());
 		}
 
-		Vec(const Vec& o) noexcept {
-			memcpy_s(data(), sizeof(data_), o.data(), sizeof(o.data_));
-		}
+		Vec(const Vec& o) = default;
 
 		explicit Vec(const T& x) noexcept {
 			static_assert(Dim == 1);
