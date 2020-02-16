@@ -1,4 +1,4 @@
-#include "PrimMUnkTabl2.h"
+#include "PrimBoneIndices.h"
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 

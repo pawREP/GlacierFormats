@@ -11,7 +11,7 @@
 #include "BoneWeightBuffer.h"
 #include "PrimBoneFlags.h"
 #include "PrimBoneInfo.h"
-#include "PrimMUnkTabl2.h"
+#include "PrimBoneIndices.h"
 #include "IMesh.h"
 #include "IRig.h"
 #include "GlacierTypes.h"
