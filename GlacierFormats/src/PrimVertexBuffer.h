@@ -3,6 +3,7 @@
 #include "Vector.h"
 #include "PrimSerializationTypes.h"
 #include "PrimBoundingBox.h"
+#include "PrimReusableRecord.h"
 
 namespace GlacierFormats {
 
@@ -17,7 +18,7 @@ namespace GlacierFormats {
 	//a integer range compressed set of four signed shorts. The serialized format used
 	//is indicated by the SPrimOnjectHeader::HAS_HIRES_POSITIONS flag. The float represenation
 	//is used if the flag is set.
-	class VertexBuffer {
+	class VertexBuffer : public ReusableRecord {
 	private:
 		std::vector<Vertex> vertices;
 
@@ -42,6 +43,8 @@ namespace GlacierFormats {
 
 		Vertex& operator[](uint32_t idx);
 		const Vertex& operator[](uint32_t idx) const;
+
+		RecordKey recordKey() const override final;
 	};
 
 }

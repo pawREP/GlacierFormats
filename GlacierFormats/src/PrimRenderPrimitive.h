@@ -64,7 +64,7 @@ namespace GlacierFormats {
 
 		ZRenderPrimitive(ZRenderPrimitive&&);
 
-		uint32_t serialize(BinaryWriter* bw) const;
+		uint32_t serialize(BinaryWriter* bw, std::unordered_map<RecordKey, uint64_t>& ) const;
 
 		[[nodiscard]] bool isWeightedMesh() const;
 		[[nodiscard]] std::string name(RuntimeId prim_id) const noexcept;

@@ -1,5 +1,5 @@
 #pragma once
-#include <memory>
+#include "PrimReusableRecord.h"
 #include <vector>
 
 namespace GlacierFormats {
@@ -17,13 +17,16 @@ namespace GlacierFormats {
 		LINKED = 1,
 	};
 
-	class CollisionData {
+	class CollisionData : public ReusableRecord {
 	public:
 		std::vector<char> data;
 		CollisionType type;
 			
 		CollisionData(BinaryReader* br, CollisionType type);
 		void serialize(BinaryWriter* bw) const;
+
+		RecordKey recordKey() const override final;
 	};
 
+	
 }

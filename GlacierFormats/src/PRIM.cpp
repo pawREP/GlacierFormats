@@ -3,9 +3,13 @@
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 #include "PrimBoundingBox.h"
+#include "PrimReusableRecord.h"
 #include "PrimRenderPrimitiveSerialization.h"
 #include "Exceptions.h"
 #include "PRIM.h"
+#include <typeindex>
+#include <utility>
+#include <unordered_map>
 
 
 using namespace GlacierFormats;
@@ -20,14 +24,22 @@ using namespace GlacierFormats;
 
 		br.seek(primary_offset);
 		SPrimObjectHeader prim_object_header = br.read<SPrimObjectHeader>();
-		prim_object_header.Assert();
-		GLACIER_ASSERT_TRUE(prim_object_header.type == SPrimHeader::EPrimType::PTOBJECTHEADER);
+
 
 		//SPrimObjectHeader should always be at the end of the resource file. The only exception are speedtree meshes which aren't supported.
 		//This test is not sufficient and could be avoided by simply not aligning but that would mess with the read coverage debug reader.
 		if(br.size() != br.tell() + 4)
 			throw UnsupportedFeatureException("SPrimObject::SUBTYPE_SPEEDTREE not supported");
+
+		prim_object_header.Assert();
+		GLACIER_ASSERT_TRUE(prim_object_header.type == SPrimHeader::EPrimType::PTOBJECTHEADER);
 		br.align();
+
+
+
+		if (((int)prim_object_header.property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_FRAMES) != (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_FRAMES) {
+			int a = 0;
+		}
 
 		manifest.rig_index = prim_object_header.bone_rig_resource_index;
 		manifest.properties = prim_object_header.property_flags;
@@ -41,10 +53,9 @@ using namespace GlacierFormats;
 		//printf("%s\n", static_cast<std::string>(id).c_str());
 		for (const auto& object_offset : object_table) {
 			br.seek(object_offset);
-			auto object = br.read<SPrimObject>();
+			auto object = br.peek<SPrimObject>();
 			object.Assert();
 			GLACIER_ASSERT_TRUE(object.type == SPrimHeader::EPrimType::PTMESH);
-			br.seek(object_offset);
 
 			RenderPrimitiveDeserializer deserializer;
 			std::unique_ptr<ZRenderPrimitive> prim = nullptr;
@@ -95,14 +106,20 @@ using namespace GlacierFormats;
 	}
 
 
+
 	void PRIM::serialize(BinaryWriter& bw) {
 		std::vector<uint32_t> object_table;
 
 		bw.write(-1);//header offset placeholder
 		bw.align();
 
+		//Record of serialized resources. Used for buffer reuse support.
+		//key: pair of type if of serialized record and std::hash of resource
+		//value: offset to resource.
+		std::unordered_map<RecordKey, uint64_t> buffer_records;
+
 		for (const auto& prim : primitives) {
-			auto off = prim->serialize(&bw);
+			auto off = prim->serialize(&bw, buffer_records);
 			object_table.push_back(off);
 		}
 
@@ -113,10 +130,6 @@ using namespace GlacierFormats;
 
 		auto header_offset = bw.tell();
 		SPrimObjectHeader header{};
-
-		//TODO: Hard coded values here have to be asserted during import. Maintainance hazard, write unified solution. 
-		header.draw_destination = 0;
-		header.pack_type = 0;
 		header.type = SPrimObjectHeader::EPrimType::PTOBJECTHEADER;
 
 		header.bone_rig_resource_index = manifest.rig_index;//TODO: Build from primitve info.

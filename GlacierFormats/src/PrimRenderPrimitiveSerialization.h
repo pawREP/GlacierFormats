@@ -2,6 +2,7 @@
 #include <cinttypes>
 #include <memory>
 #include "PrimSerializationTypes.h"
+#include "PrimReusableRecord.h"
 
 namespace GlacierFormats {
 
@@ -11,7 +12,7 @@ namespace GlacierFormats {
 
 	class RenderPrimitiveSerializer {
 	public:
-		uint32_t serialize(BinaryWriter* br, const ZRenderPrimitive* prim);
+		uint32_t serialize(BinaryWriter* br, const ZRenderPrimitive* prim, std::unordered_map<RecordKey, uint64_t>&);
 	};
 
 	class RenderPrimitiveDeserializer {

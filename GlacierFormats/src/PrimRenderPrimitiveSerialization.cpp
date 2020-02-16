@@ -6,7 +6,9 @@
 
 using namespace GlacierFormats;
 
-	uint32_t RenderPrimitiveSerializer::serialize(BinaryWriter* bw, const ZRenderPrimitive* prim) {
+	uint32_t RenderPrimitiveSerializer::serialize(BinaryWriter* bw, const ZRenderPrimitive* prim, std::unordered_map<RecordKey, uint64_t>& buffer_record) {
+		RecordKey record_key{ typeid(void), 0};
+
 		SPrimSubMesh submesh{};
 
 		//Set inherited SPrimObject properties 
@@ -14,39 +16,43 @@ using namespace GlacierFormats;
 		submesh.num_uv_channels = 1;//TODO: Note multiple UV channels can now be supported when using the GLTF exchange format.
 
 		//Index Buffer
-		submesh.index_buffer = bw->tell();
+		record_key = prim->index_buffer->recordKey();
+		if (buffer_record.find(record_key) == buffer_record.end()) {
+			buffer_record[record_key] = bw->tell();
+			prim->index_buffer->serialize(bw);
+		}
+		submesh.index_buffer = buffer_record[record_key];
 		submesh.num_indices = prim->index_buffer->size();
-		prim->index_buffer->serialize(bw);
+		
+		//Per vertex data
+		record_key = prim->vertex_buffer->recordKey();
+		if (buffer_record.find(record_key) == buffer_record.end()) {
 
-		//Vertex Buffer
-		submesh.vertex_buffer = bw->tell();
+			//Vertex Buffer
+			buffer_record[record_key] = bw->tell();
+			prim->vertex_buffer->serialize(bw);
+
+			//Vertex Weights
+			if (prim->bone_weight_buffer)
+				prim->bone_weight_buffer->serialize(bw);
+
+			//Per Vertex Data
+			float texture_scale[2];
+			float texture_bias[2];
+			prim->vertex_data->serialize(bw, texture_scale, texture_bias);
+
+			//TODO: Add dummy data again, alternativelty, add finalize() to PRIM
+			if (prim->vertex_colors)
+				prim->vertex_colors->serialize(bw);
+		}
+		submesh.vertex_buffer = buffer_record[record_key];
 		submesh.num_vertex = prim->vertex_buffer->size();
 		BoundingBox vertex_buffer_bb = prim->vertex_buffer->getBoundingBox();
 		for (int i = 0; i < 3; ++i) {
 			submesh.min[i] = vertex_buffer_bb.min[i];
 			submesh.max[i] = vertex_buffer_bb.max[i];
 		}
-		prim->vertex_buffer->serialize(bw);
 
-		//Vertex Weights
-		if (prim->bone_weight_buffer)
-			prim->bone_weight_buffer->serialize(bw);
-
-		//Per Vertex Data
-		float texture_scale[2];
-		float texture_bias[2];
-		prim->vertex_data->serialize(bw, texture_scale, texture_bias);
-
-		//TODO: Add dummy data again, alternativelty, add finalize() to PRIM
-		//Bone weight flags are required in weighted meshes, create dummy data if prim doesn't have flags
-		if (prim->vertex_colors)//TODO: Those flags are probably vertex colors, not bone related
-			prim->vertex_colors->serialize(bw);
-		//else if (prim->isWeightedMesh()) {
-		//	for (int i = 0; i < 4 * prim->vertexCount(); ++i)
-		//		bw->write<unsigned char>(0xFF);
-		//}
-
-		//This alignment might be before bone flags, not sure.
 		bw->align();
 
 		if (prim->cloth_data) {
@@ -59,8 +65,12 @@ using namespace GlacierFormats;
 		bw->align();
 
 		if (prim->collision_data) {
-			submesh.collision = bw->tell();
-			prim->collision_data->serialize(bw);
+			record_key = prim->collision_data->recordKey();
+			if (buffer_record.find(record_key) == buffer_record.end()) {
+				buffer_record[record_key] = bw->tell();
+				prim->collision_data->serialize(bw);
+			}
+			submesh.collision = buffer_record[record_key];
 		}
 		else {
 			submesh.collision = 0;
@@ -102,6 +112,9 @@ using namespace GlacierFormats;
 			prim_mesh.max[i] = vertex_buffer_bb.max[i];
 		}
 
+
+		float texture_scale[2];
+		float texture_bias[2];//TODO: CRITICAL: Needs to be fixed
 		for (int i = 0; i < 2; ++i) {
 			prim_mesh.uv_scale[i] = texture_scale[i];
 			prim_mesh.uv_bias[i] = texture_bias[i];
@@ -242,8 +255,6 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 			br->seek(prim_mesh_weigthed->bone_indices);
 			prim->bone_indices = std::make_unique<BoneIndices>(br);
 		}
-
-
 	}
 
 

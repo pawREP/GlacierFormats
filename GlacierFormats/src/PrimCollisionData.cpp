@@ -1,6 +1,7 @@
 #include "PrimCollisionData.h"
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
+#include "Hash.h"
 
 using namespace GlacierFormats;
 
@@ -24,4 +25,8 @@ using namespace GlacierFormats;
 		}
 		bw->write(data.data(), data.size());
 		bw->align();
+	}
+
+	RecordKey CollisionData::recordKey() const	{
+		return RecordKey({typeid(CollisionData), hash::fnv1a(data)});
 	}

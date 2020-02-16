@@ -5,15 +5,15 @@
 using namespace GlacierFormats;
 
 	VertexColors::VertexColors(int size) noexcept {
-		flags = std::vector<unsigned char>(size, 0xFF);
+		colors = std::vector<unsigned char>(size, 0xFF);
 	}
 
 	VertexColors::VertexColors(BinaryReader* br, const SPrimSubMesh* prim_submesh) {
 		auto size = 4 * prim_submesh->num_vertex;
-		flags.resize(size);
-		br->read(flags.data(), size);
+		colors.resize(size);
+		br->read(colors.data(), size);
 	}
 
 	void VertexColors::serialize(BinaryWriter* bw) const {
-		bw->write(flags.data(), flags.size());
+		bw->write(colors.data(), colors.size());
 	};

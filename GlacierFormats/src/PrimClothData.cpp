@@ -11,9 +11,7 @@ enum class ClothDataType {
 };
 
 ClothDataType guessSizeType(BinaryReader* br, int vertex_count, int size_hint) {
-	auto base_pos = br->tell();
-	auto size = br->read<uint16_t>();
-	br->seek(base_pos);
+	auto size = br->peek<uint16_t>();
 
 	auto v0_size_guess = size;
 	auto v1_size_guess = 0x14 * vertex_count;

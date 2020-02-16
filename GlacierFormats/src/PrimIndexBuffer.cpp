@@ -3,6 +3,7 @@
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 #include "PrimSerializationTypes.h"
+#include "Hash.h"
 
 using namespace GlacierFormats;
 
@@ -15,7 +16,7 @@ using namespace GlacierFormats;
 		br->read(indices.data(), indices.size());
 	}
 
-	void IndexBuffer::serialize(BinaryWriter* bw) {
+	void IndexBuffer::serialize(BinaryWriter* bw) const {
 		//TODO: Warn about large buffers and/or use index buffer extension. Needs more research, requirements for split index buffer unknown. 
 		bw->write(indices.data(), indices.size());
 		bw->align();
@@ -41,5 +42,9 @@ using namespace GlacierFormats;
 
 	uint16_t& IndexBuffer::operator[](uint32_t idx) {
 		return indices[idx];
+	}
+
+	RecordKey GlacierFormats::IndexBuffer::recordKey() const {
+		return RecordKey{ typeid(IndexBuffer), hash::fnv1a(indices) };
 	}
 

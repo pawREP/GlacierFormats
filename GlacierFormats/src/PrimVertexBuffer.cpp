@@ -3,6 +3,7 @@
 #include "PrimSerializationTypes.h"
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
+#include "Hash.h"
 
 using namespace GlacierFormats;
 
@@ -103,6 +104,10 @@ using namespace GlacierFormats;
 
 	const Vertex& VertexBuffer::operator[](uint32_t idx) const {
 		return vertices[idx];
+	}
+
+	RecordKey VertexBuffer::recordKey() const {
+		return RecordKey{ typeid(VertexBuffer), hash::fnv1a(vertices) };
 	}
 
 	BoundingBox<Vertex> VertexBuffer::getBoundingBox() const {

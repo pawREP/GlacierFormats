@@ -10,7 +10,7 @@ namespace GlacierFormats {
 	class VertexColors
 	{
 	public:
-		std::vector<unsigned char> flags;
+		std::vector<unsigned char> colors;
 
 		explicit VertexColors(int size) noexcept;
 		VertexColors(BinaryReader* br, const SPrimSubMesh* prim_submesh);

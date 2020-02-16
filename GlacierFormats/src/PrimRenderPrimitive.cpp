@@ -4,6 +4,7 @@
 #include "BinaryReader.hpp"
 #include "PrimSerializationTypes.h"
 #include "PrimBoundingBox.h"
+#include "PrimReusableRecord.h"
 #include "PrimRenderPrimitiveSerialization.h"
 #include "PrimRenderPrimitiveBuilder.h"
 
@@ -26,9 +27,9 @@ using namespace GlacierFormats;
 		bone_indices = std::move(src.bone_indices);
 	}
 
-	uint32_t ZRenderPrimitive::serialize(BinaryWriter* bw) const {
+	uint32_t ZRenderPrimitive::serialize(BinaryWriter* bw, std::unordered_map<RecordKey, uint64_t>& buffer_record) const {
 		RenderPrimitiveSerializer serializer;
-		return serializer.serialize(bw, this);
+		return serializer.serialize(bw, this, buffer_record);
 	}
 
 	bool ZRenderPrimitive::isWeightedMesh() const {
