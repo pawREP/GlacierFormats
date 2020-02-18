@@ -4,12 +4,14 @@
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 #include "Hash.h"
+#include "IntegerRangeCompression.h"
 
 using namespace GlacierFormats;
 
 	//VertexBuffer::VertexBuffer() {}
 
 	VertexBuffer::VertexBuffer(const std::vector<float>& positions) {
+		is_high_res_buffer = false;
 		const int floats_per_vert = 3;
 		auto vertex_count = positions.size() / floats_per_vert;
 
@@ -20,14 +22,20 @@ using namespace GlacierFormats;
 	}
 
 	VertexBuffer::VertexBuffer(BinaryReader* br, const SPrimObjectHeader* prim_object_header, const SPrimMesh* prim_mesh, const SPrimSubMesh* prim_submesh) {
-		if (((int)prim_object_header->property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_HIRES_POSITIONS) == 0) {
+		is_high_res_buffer = (
+			((int)prim_object_header->property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_HIRES_POSITIONS) == 
+			(int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_HIRES_POSITIONS
+			);
+
+		if (!is_high_res_buffer) {
 			vertices.resize(prim_submesh->num_vertex);
 			for (int i = 0; i < prim_submesh->num_vertex; ++i) {
-				vertices[i].x() = (static_cast<float>(br->read<short>())* prim_mesh->pos_scale[0] / 32767.0 + prim_mesh->pos_bias[0]);
-				vertices[i].y() = (static_cast<float>(br->read<short>())* prim_mesh->pos_scale[1] / 32767.0 + prim_mesh->pos_bias[1]);
-				vertices[i].z() = (static_cast<float>(br->read<short>())* prim_mesh->pos_scale[2] / 32767.0 + prim_mesh->pos_bias[2]);
-				vertices[i].w() = (static_cast<float>(br->read<short>())* prim_mesh->pos_scale[3] / 32767.0 + prim_mesh->pos_bias[3]);
+				//There is an off-by-one error in IOI's compression code. The compressed shorts only range from -32767 to 32767.
 
+				vertices[i].x() = IntegerRangeCompressor<short, float>::decompress(br->read<short>(), prim_mesh->pos_scale[0], prim_mesh->pos_bias[0]);
+				vertices[i].y() = IntegerRangeCompressor<short, float>::decompress(br->read<short>(), prim_mesh->pos_scale[1], prim_mesh->pos_bias[1]);
+				vertices[i].z() = IntegerRangeCompressor<short, float>::decompress(br->read<short>(), prim_mesh->pos_scale[2], prim_mesh->pos_bias[2]);
+				vertices[i].w() = IntegerRangeCompressor<short, float>::decompress(br->read<short>(), prim_mesh->pos_scale[3], prim_mesh->pos_bias[3]);
 			}
 		}
 		else {
@@ -54,23 +62,39 @@ using namespace GlacierFormats;
 	}
 
 	void VertexBuffer::serialize(BinaryWriter* bw) {
-		float scale[4];
-		float bias[4];
+		if (!is_high_res_buffer) {
+			float scale[4];
+			float bias[4];
 
-		BoundingBox bb = BoundingBox(vertices);
-		bb.getIntegerRangeCompressionParameters(scale, bias);
+			BoundingBox bb = BoundingBox(vertices);
+			bb.getIntegerRangeCompressionParameters(scale, bias);
 
-		//Only low res serialisation.
-		for (const auto& vertex : vertices) {
-			auto x = static_cast<short>(std::roundf(32767.0 * (vertex[0] - bias[0]) / scale[0]));
-			auto y = static_cast<short>(std::roundf(32767.0 * (vertex[1] - bias[1]) / scale[1]));
-			auto z = static_cast<short>(std::roundf(32767.0 * (vertex[2] - bias[2]) / scale[2]));
-			auto w = static_cast<short>(std::roundf(32767.0));
+			//Only low res serialisation.
+			for (const auto& vertex : vertices) {
+				//old
+				//auto x = static_cast<short>(std::roundf(32767.0 * (vertex[0] - bias[0]) / scale[0]));
+				//auto y = static_cast<short>(std::roundf(32767.0 * (vertex[1] - bias[1]) / scale[1]));
+				//auto z = static_cast<short>(std::roundf(32767.0 * (vertex[2] - bias[2]) / scale[2]));
+				//auto w = static_cast<short>(std::roundf(32767.0));
 
-			bw->write(x);
-			bw->write(y);
-			bw->write(z);
-			bw->write(w);
+				auto x = IntegerRangeCompressor<short,float>::compress(vertex[0], scale[0], bias[0]);
+				auto y = IntegerRangeCompressor<short,float>::compress(vertex[1], scale[1], bias[1]);
+				auto z = IntegerRangeCompressor<short,float>::compress(vertex[2], scale[2], bias[2]);
+				short w = 0x7FFF;
+
+
+				bw->write(x);
+				bw->write(y);
+				bw->write(z);
+				bw->write(w);
+			}
+		}
+		else {
+			for (const auto& vertex : vertices) {
+				bw->write(vertex.x());
+				bw->write(vertex.y());
+				bw->write(vertex.z());
+			}
 		}
 	}
 

@@ -22,10 +22,12 @@ namespace GlacierFormats {
 	private:
 		std::vector<Vertex> vertices;
 
+		bool is_high_res_buffer;
+
 	public:
 		//VertexBuffer();
 		VertexBuffer(const std::vector<float>& positions);
-		VertexBuffer(std::vector<float>&& positions);
+		//VertexBuffer(std::vector<float>&& positions);
 		VertexBuffer(BinaryReader* br, const SPrimObjectHeader* prim_object_header, const SPrimMesh* prim_mesh, const SPrimSubMesh* prim_submesh);
 
 		[[nodiscard]] std::vector<float> getCanonicalForm() const;
