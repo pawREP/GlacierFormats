@@ -3,6 +3,8 @@
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 #include "Exceptions.h"
+#include "Hash.h"
+#include "IntegerRangeCompression.h"
 
 using namespace GlacierFormats;
 
@@ -37,11 +39,9 @@ using namespace GlacierFormats;
 				prim->bone_weight_buffer->serialize(bw);
 
 			//Per Vertex Data
-			float texture_scale[2];
-			float texture_bias[2];
-			prim->vertex_data->serialize(bw, texture_scale, texture_bias);
+			prim->vertex_data->serialize(bw);
 
-			//TODO: Add dummy data again, alternativelty, add finalize() to PRIM
+			//TODO: Add dummy data again, alternatively, add finalize() to PRIM
 			if (prim->vertex_colors)
 				prim->vertex_colors->serialize(bw);
 		}
@@ -78,14 +78,18 @@ using namespace GlacierFormats;
 
 		bw->align();
 
-		uint32_t submesh_offset = static_cast<uint32_t>(bw->tell());
-		submesh.Assert();
-		bw->write(submesh);
+		record_key = RecordKey{ typeid(SPrimSubMesh), hash::fnv1a(submesh) }; //Points to submesh table offset, not to submesh struct
+		if (buffer_record.find(record_key) == buffer_record.end()) {
+			uint32_t submesh_offset = static_cast<uint32_t>(bw->tell());
+			submesh.Assert();
+			bw->write(submesh);
 
-		//submesh table
-		uint32_t submesh_table_offset = static_cast<uint32_t>(bw->tell());
-		bw->write(submesh_offset);
-		bw->align();
+			//submesh table
+			buffer_record[record_key] = static_cast<uint32_t>(bw->tell());
+			bw->write(submesh_offset);
+			bw->align();
+		}
+		auto submesh_table_offset = static_cast<uint32_t>(buffer_record[record_key]);
 
 		SPrimMeshWeighted prim_mesh{};
 
@@ -112,9 +116,11 @@ using namespace GlacierFormats;
 			prim_mesh.max[i] = vertex_buffer_bb.max[i];
 		}
 
-
+		
 		float texture_scale[2];
-		float texture_bias[2];//TODO: CRITICAL: Needs to be fixed
+		float texture_bias[2];
+		BoundingBox uv_bb = BoundingBox(prim->vertex_data->uvs);
+		uv_bb.getIntegerRangeCompressionParameters(texture_scale, texture_bias);
 		for (int i = 0; i < 2; ++i) {
 			prim_mesh.uv_scale[i] = texture_scale[i];
 			prim_mesh.uv_bias[i] = texture_bias[i];
@@ -166,9 +172,6 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 
 	br->align();
 
-	//if (prim_mesh->)
-	//	throw UnsupportedFeatureException("Mesh UnkTable1 not supported");
-
 	br->seek(prim_mesh->sub_mesh_table);
 	auto submesh_offset = br->read<uint32_t>();
 	br->align();
@@ -199,6 +202,14 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 	//Vertex buffer
 	br->seek(prim_submesh.vertex_buffer);
 	prim->vertex_buffer = std::make_unique<VertexBuffer>(br, prim_object_header, prim_mesh.get(), &prim_submesh);
+	auto bb = prim->vertex_buffer->getBoundingBox();
+
+	float scale[3];
+	float bias[3];
+	IntegerRangeCompressor<short, float>::getCompressionParameters(bb.min[0], bb.max[0], scale[0], bias[0]);
+	IntegerRangeCompressor<short, float>::getCompressionParameters(bb.min[1], bb.max[1], scale[1], bias[1]);
+	IntegerRangeCompressor<short, float>::getCompressionParameters(bb.min[2], bb.max[2], scale[2], bias[2]);
+
 
 	//Vertex weights
 	if(prim_mesh->sub_type == SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED)
