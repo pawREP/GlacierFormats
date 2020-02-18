@@ -23,7 +23,7 @@ namespace GlacierFormats {
 
 		VertexDataBuffer();
 		VertexDataBuffer(BinaryReader* br, const SPrimMesh* prim_mesh, const SPrimSubMesh* prim_submesh);
-		void serialize(BinaryWriter* bw, float scale[2], float bias[2]);
+		void serialize(BinaryWriter* bw);
 
 		std::vector<float> getNormals() const;
 		std::vector<float> getTangents() const;

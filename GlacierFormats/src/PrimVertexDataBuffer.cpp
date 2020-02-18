@@ -88,8 +88,10 @@ namespace {
 		}
 	}
 
-	void VertexDataBuffer::serialize(BinaryWriter* bw, float uv_scale[2], float uv_bias[2]) {
+	void VertexDataBuffer::serialize(BinaryWriter* bw) {
 		//calc uv scale and bias
+		float uv_scale[2];
+		float uv_bias[2];
 		BoundingBox bb = BoundingBox(uvs);
 		bb.getIntegerRangeCompressionParameters(uv_scale, uv_bias);
 
@@ -103,18 +105,27 @@ namespace {
 			bw->write(Compress8BitFloat(normal.z()));
 			bw->write(Compress8BitFloat(normal.w()));
 
-			//TODO: Implement logic to calculate tangents and bitangents. Import routines might not initilize them.
+			
 			bw->write(Compress8BitFloat(tangent.x()));
 			bw->write(Compress8BitFloat(tangent.y()));
 			bw->write(Compress8BitFloat(tangent.z()));
 			bw->write(Compress8BitFloat(tangent.w()));
 
-			Vec<float, 3> bitangent = cross(normal.xyz(), tangent.xyz());
+			if (bitangents.size()) {
+				bw->write(Compress8BitFloat(bitangents[i].x()));
+				bw->write(Compress8BitFloat(bitangents[i].y()));
+				bw->write(Compress8BitFloat(bitangents[i].z()));
+				bw->write(Compress8BitFloat(0.f));
+			}
+			else {
+				auto bitangent = cross(normal.xyz(), tangent.xyz());
+				bw->write(Compress8BitFloat(bitangent.x()));
+				bw->write(Compress8BitFloat(bitangent.y()));
+				bw->write(Compress8BitFloat(bitangent.z()));
+				bw->write(Compress8BitFloat(0.f));
+			}
 
-			bw->write(Compress8BitFloat(bitangent.x()));
-			bw->write(Compress8BitFloat(bitangent.y()));
-			bw->write(Compress8BitFloat(bitangent.z()));
-			bw->write(Compress8BitFloat(0.f));
+
 
 			//UV coordinates
 			bw->write(static_cast<short>(std::roundf(32767.0 * (uvs[i].x() - uv_bias[0]) / uv_scale[0])));//TODO: make generic integer range compression fn
