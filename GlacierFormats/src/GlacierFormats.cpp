@@ -92,7 +92,7 @@ void GlacierFormats::GlacierInit() {
 }
 
 void GlacierFormats::GlacierInit(const std::filesystem::path& glacier_runtime_directory) {
-	//Initilize COM system. This required for DirectXTex.
+	//Initilize COM system. This is required for DirectXTex.
 	auto hr = CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 	if (FAILED(hr))
 		throw std::runtime_error("Failed to initilize COM system");
