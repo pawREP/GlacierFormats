@@ -9,6 +9,10 @@ GlacierFormats::CopyBones::CopyBones(BinaryReader* br, int count) {
 	br->align();
 }
 
+int GlacierFormats::CopyBones::copyBoneCount() const {
+	return copy_bones.size() / 2;
+}
+
 void GlacierFormats::CopyBones::serialize(BinaryWriter* bw) const {
 	for (const auto& copy_bone : copy_bones)
 		bw->write(copy_bone);

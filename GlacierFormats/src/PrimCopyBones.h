@@ -12,6 +12,9 @@ namespace GlacierFormats {
 
 	public:
 		CopyBones(BinaryReader* br, int count);
+
+		int copyBoneCount() const;
+
 		void serialize(BinaryWriter* bw) const;
 	};
 
