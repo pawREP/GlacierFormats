@@ -15,6 +15,7 @@ namespace GlacierFormats {
 	class IBinaryReaderSource {
 	public:
 		virtual void read(char* dst, int64_t len) = 0;
+		virtual void peek(char* dst, int64_t len) = 0;//Peak is defined at the IBinaryReaderSource interface level rather than in the Reader to make it accessable for source mixins. (see LoggedBinaryReaderSource)
 		virtual void seek(int64_t offset) = 0;
 		virtual int64_t tell() = 0; //can't be const because ifstream equivalent isn't const.
 		virtual int64_t size() const = 0;
@@ -35,6 +36,12 @@ namespace GlacierFormats {
 
 		void read(char* dst, int64_t len) override {
 			ifs.read(dst, len);
+		}
+
+		void peek(char* dst, int64_t len) override {
+			auto o = tell();
+			ifs.read(dst, len);
+			seek(o);
 		}
 
 		void seek(int64_t offset) override final {
@@ -81,6 +88,12 @@ namespace GlacierFormats {
 				throw InvalidArgumentsException("Out of bounds read");
 			memcpy_s(dst, len, &(read_buffer[cur]), len);
 			cur += len;
+		}
+
+		void peek(char* dst, int64_t len) override {
+			if (cur + len > buffer_size)
+				throw InvalidArgumentsException("Out of bounds read");
+			memcpy_s(dst, len, &(read_buffer[cur]), len);
 		}
 
 		void seek(int64_t offset) override final {
