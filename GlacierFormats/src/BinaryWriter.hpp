@@ -12,6 +12,8 @@ namespace GlacierFormats {
 		virtual int64_t tell() = 0;
 		virtual void close() = 0;
 		virtual std::vector<char> release() = 0;
+
+		virtual ~IBinaryWriterSink() {};
 	};
 
 	class BinaryWriterFileSink : public IBinaryWriterSink {
