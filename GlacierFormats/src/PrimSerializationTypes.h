@@ -38,12 +38,12 @@ namespace GlacierFormats {
 
 	struct SPrimObjectHeader : public SPrims {
 		enum class PROPERTY_FLAGS {
-			HAS_BONES = 0x01,			//
-			HAS_FRAMES = 0x02,			//Allways set. (Except for speedtree meshes)
-			IS_LINKED_OBJECT = 0x04,	//Set for linkend objects
-			IS_WEIGHTED_OBJECT = 0x08,	//Set for weighted objects
-			USE_BOUNDS = 0x0100,
-			HAS_HIRES_POSITIONS = 0x0200,
+			HAS_BONES = 0x01,				//
+			HAS_FRAMES = 0x02,				//Always set. (Except for speedtree meshes)
+			IS_LINKED_OBJECT = 0x04,		//Set for linkend objects
+			IS_WEIGHTED_OBJECT = 0x08,		//Set for weighted objects
+			USE_BOUNDS = 0x0100,			
+			HAS_HIRES_POSITIONS = 0x0200,	//Set if submesh use 32 bit vertex position data instead of the default 16 bit.
 		};
 
 		PROPERTY_FLAGS property_flags;	//Properties
@@ -58,7 +58,7 @@ namespace GlacierFormats {
 				GLACIER_ASSERT_TRUE(bone_rig_resource_index == 0);
 			}
 			else if (((int)property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_LINKED_OBJECT) == (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_LINKED_OBJECT) {
-				//printf("%d\n", bone_rig_resource_index);
+				printf("%d\n", bone_rig_resource_index);
 			}
 			else {
 				GLACIER_ASSERT_TRUE(bone_rig_resource_index == -1);
@@ -103,13 +103,11 @@ namespace GlacierFormats {
 		char offset;
 		short material_id;				//Index of the MATI reference used for this mesh
 		int wire_color;					//Color used by wire-frame debug render.
-		int debug_color;				//Unknown purpose. Looks like another debug color type value. Maybe collision wireframe color or something...
+		int debug_color;				//Unknown purpose. Looks like another debug color type value. Maybe collision, bounding box wireframe color or something like that...
 		float min[3];					//Bounding box min
 		float max[3];					//Bounding box max
 
 		void Assert() {
-			if(type != EPrimType::NONE)
-				GLACIER_ASSERT_TRUE(debug_color == 0);
 			if (type == EPrimType::NONE)
 				GLACIER_ASSERT_TRUE(
 					properties == PROPERTY_FLAGS::NONE || 
@@ -186,6 +184,7 @@ namespace GlacierFormats {
 			GLACIER_ASSERT_TRUE(offset == 0);
 			GLACIER_ASSERT_TRUE(material_id == 0);
 			GLACIER_ASSERT_TRUE(wire_color == 0);
+			GLACIER_ASSERT_TRUE((properties == SPrimObject::PROPERTY_FLAGS::NONE) || properties == SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1)
 			//Assert SPrimObjectHeader members;
 			GLACIER_ASSERT_TRUE(type == SPrimObjectHeader::EPrimType::NONE);
 
