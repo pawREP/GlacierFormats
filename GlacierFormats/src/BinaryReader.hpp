@@ -49,7 +49,7 @@ namespace GlacierFormats {
 		}
 
 		int64_t tell() override final {
-			static_cast<int64_t>(ifs.tellg());
+			return static_cast<int64_t>(ifs.tellg());
 		}
 
 		int64_t size() const override final {
