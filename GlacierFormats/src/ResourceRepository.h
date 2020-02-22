@@ -10,6 +10,16 @@
 
 namespace GlacierFormats {
 
+	/*
+	The Resource Repository needs some re-writing since new information has come to light:
+		- Different archives might contain models with the same RuntimeId, those resources are only distinguished at runtime. 
+		  Example: The mumbai train (00E4752DAB3C9CAE) is present in dlc10 and dlc15. The current implemenation only gives access to the dlc15 resource
+				   which isn't the resource used in the mumbai main mission.
+		- Deletion lists are not implemented atm, so resources might appear to shadow eachother in unexpected ways.
+		- Multi-threaded construction is not possible atm since lib lz4 doesn't support it. Switch lib.
+		- A mechanism to not read user generated patches would be nice. Impl could be based on magic key in deletion list. 
+	*/
+
 #pragma pack(push, 1)
 	struct Header {
 		char magic[4];

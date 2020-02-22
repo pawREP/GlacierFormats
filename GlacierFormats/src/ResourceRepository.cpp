@@ -63,7 +63,7 @@ std::filesystem::path ResourceRepository::runtime_dir = std::filesystem::path();
 		//Could be based on a unique key in the deletion list. 
 		std::vector<std::filesystem::path> rpkg_file_paths;
 		for (const auto& it : std::filesystem::directory_iterator(runtime_path)) {
-			if (it.is_regular_file() && it.path().extension().generic_string() == ".rpkg") {
+			if (it.is_regular_file() && (it.path().extension().generic_string() == ".rpkg")) {
 				rpkg_file_paths.push_back(it.path());
 			}
 		}
@@ -78,7 +78,6 @@ std::filesystem::path ResourceRepository::runtime_dir = std::filesystem::path();
 			ifs.read((char*)&repo_header, sizeof(Header));
 
 			//TODO: It's probably better to check for the substring "patch" in the file name. The check below is a bit scuffed.
-			//if is patch
 			if ((repo_header.deletion_block_id_count & 0xFFFF0000) == 0)
 				ifs.seekg(sizeof(Header) + repo_header.deletion_block_id_count * sizeof(RuntimeId));
 			else
