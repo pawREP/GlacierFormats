@@ -28,7 +28,7 @@ namespace GlacierFormats {
 			return std::make_unique<T>(br, id);
 		}
 
-		static std::unique_ptr<T> readFromFile(const std::filesystem::path& file_path, RuntimeId id = 0) {
+		static std::unique_ptr<T> readFromFile(const std::filesystem::path& file_path, RuntimeId id = static_cast<uint64_t>(0)) {
 			if(!id)
 				id = getRuntimeIdFromPath(file_path);
 			BinaryReader br(file_path);
