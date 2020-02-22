@@ -189,9 +189,7 @@ namespace GlacierFormats {
 
 		template<typename T>
 		void peek(T* arr, int64_t len) {
-			auto read_pos = tell();
-			source->read(reinterpret_cast<char*>(arr), sizeof(T)* len);
-			seek(read_pos);
+			source->peek(reinterpret_cast<char*>(arr), sizeof(T)* len);
 		}
 
 		template<typename T>
@@ -203,10 +201,8 @@ namespace GlacierFormats {
 
 		template<typename T>
 		T peek() {
-			auto read_pos = tell();
 			T value;
-			read(&value, 1);
-			seek(read_pos);
+			peek(&value, 1);
 			return value;
 		}
 
