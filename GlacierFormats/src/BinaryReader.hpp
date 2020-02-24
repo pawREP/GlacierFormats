@@ -151,7 +151,7 @@ namespace GlacierFormats {
 			source = std::move(br.source);
 		}
 
-		BinaryReader(std::filesystem::path path) {
+		BinaryReader(const std::filesystem::path& path) {
 			source = std::make_unique<BinaryReaderFileSource>(path);
 		}
 
