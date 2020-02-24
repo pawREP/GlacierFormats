@@ -13,10 +13,10 @@ namespace GlacierFormats {
 #pragma pack(push,1)
 	struct SPrimHeader {
 		enum class EPrimType : short {
-			NONE = 0,
-			PTOBJECTHEADER = 1,
-			PTMESH = 2,
-			PTSHAPE = 5,
+			NONE = 0,			//Unused
+			PTOBJECTHEADER = 1, //Object header
+			PTMESH = 2,			//Mesh and submesh headers
+			PTSHAPE = 5,		//Unused
 		};
 
 		char draw_destination;	//Unused? Always 0
@@ -50,15 +50,15 @@ namespace GlacierFormats {
 		int bone_rig_resource_index;	//Index of BORG resource. 0 if PROPERTY_FLAGS::IS_WEIGHTED_OBJECT is set. 0 if not linked or weighted flags are set. Linked, 0 or -1?
 		int num_objects;				//Number of mesh objects in the object table
 		int object_table;				//Offset to table of mesh objects
-		float min[3];					//Global bounding box min
-		float max[3];					//Global bounding box max
+		float min[3];					//Bounding box min as it appears in-engine. The bounding box dimensions don't necessarily match the bounding box of the vertex buffer. TODO: Needs more RE
+		float max[3];					//Bounding box max as it appears in-engine.
 
 		void Assert() {
 			if (((int)property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_WEIGHTED_OBJECT) == (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_WEIGHTED_OBJECT) {
 				GLACIER_ASSERT_TRUE(bone_rig_resource_index == 0);
 			}
 			else if (((int)property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_LINKED_OBJECT) == (int)SPrimObjectHeader::PROPERTY_FLAGS::IS_LINKED_OBJECT) {
-				printf("%d\n", bone_rig_resource_index);
+				//printf("%d\n", bone_rig_resource_index);
 			}
 			else {
 				GLACIER_ASSERT_TRUE(bone_rig_resource_index == -1);
@@ -86,7 +86,7 @@ namespace GlacierFormats {
 
 		enum class PROPERTY_FLAGS : char {
 			NONE = 0,
-			PROPERTY_XAXISLOCKED = 0x01,		//The axis lock colors are presumably used for decal meshes. Needs a bit more rsearch though. 
+			PROPERTY_XAXISLOCKED = 0x01,		//The axis lock flags are presumably used for decal meshes. Needs a bit more rsearch though. 
 			PROPERTY_YAXISLOCKED = 0x02,
 			PROPERTY_ZAXISLOCKED = 0x04,
 			PROPERTY_HIRES_POSITIONS = 0x08,	//Set for meshes that use 32 bit precision position data, instead of the default 16 bit precision.
@@ -103,9 +103,9 @@ namespace GlacierFormats {
 		char offset;
 		short material_id;				//Index of the MATI reference used for this mesh
 		int wire_color;					//Color used by wire-frame debug render.
-		int debug_color;				//Unknown purpose. Looks like another debug color type value. Maybe collision, bounding box wireframe color or something like that...
-		float min[3];					//Bounding box min
-		float max[3];					//Bounding box max
+		int color1;						//RGBA color value that acts like a global vertex color. TODO: Investigate relationship with PROPERTY_FLAGS::PROPERTY_COLOR1
+		float min[3];					//Bounding box min as it appears in-engine. The bounding box dimensions don't necessarily match the bounding box of the vertex buffer. TODO: Needs more RE
+		float max[3];					//Bounding box max as it appears in-engine.
 
 		void Assert() {
 			if (type == EPrimType::NONE)
@@ -184,7 +184,10 @@ namespace GlacierFormats {
 			GLACIER_ASSERT_TRUE(offset == 0);
 			GLACIER_ASSERT_TRUE(material_id == 0);
 			GLACIER_ASSERT_TRUE(wire_color == 0);
-			GLACIER_ASSERT_TRUE((properties == SPrimObject::PROPERTY_FLAGS::NONE) || properties == SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1)
+			GLACIER_ASSERT_TRUE((properties == SPrimObject::PROPERTY_FLAGS::NONE) || properties == SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1);
+			//if (properties == SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1)
+			//	GLACIER_ASSERT_TRUE(color1 == 0);
+
 			//Assert SPrimObjectHeader members;
 			GLACIER_ASSERT_TRUE(type == SPrimObjectHeader::EPrimType::NONE);
 
