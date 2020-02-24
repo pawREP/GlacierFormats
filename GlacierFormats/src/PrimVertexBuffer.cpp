@@ -8,8 +8,6 @@
 
 using namespace GlacierFormats;
 
-	//VertexBuffer::VertexBuffer() {}
-
 	VertexBuffer::VertexBuffer(const std::vector<float>& positions) {
 		is_high_res_buffer = false;
 		const int floats_per_vert = 3;
@@ -71,17 +69,10 @@ using namespace GlacierFormats;
 
 			//Only low res serialisation.
 			for (const auto& vertex : vertices) {
-				//old
-				//auto x = static_cast<short>(std::roundf(32767.0 * (vertex[0] - bias[0]) / scale[0]));
-				//auto y = static_cast<short>(std::roundf(32767.0 * (vertex[1] - bias[1]) / scale[1]));
-				//auto z = static_cast<short>(std::roundf(32767.0 * (vertex[2] - bias[2]) / scale[2]));
-				//auto w = static_cast<short>(std::roundf(32767.0));
-
 				auto x = IntegerRangeCompressor<short,float>::compress(vertex[0], scale[0], bias[0]);
 				auto y = IntegerRangeCompressor<short,float>::compress(vertex[1], scale[1], bias[1]);
 				auto z = IntegerRangeCompressor<short,float>::compress(vertex[2], scale[2], bias[2]);
 				short w = 0x7FFF;
-
 
 				bw->write(x);
 				bw->write(y);

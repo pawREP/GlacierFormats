@@ -18,20 +18,17 @@ namespace GlacierFormats {
 	//a integer range compressed set of four signed shorts. The serialized format used
 	//is indicated by the SPrimOnjectHeader::HAS_HIRES_POSITIONS flag. The float represenation
 	//is used if the flag is set.
+
 	class VertexBuffer : public ReusableRecord {
 	private:
 		std::vector<Vertex> vertices;
-
 		bool is_high_res_buffer;
 
 	public:
-		//VertexBuffer();
 		VertexBuffer(const std::vector<float>& positions);
-		//VertexBuffer(std::vector<float>&& positions);
 		VertexBuffer(BinaryReader* br, const SPrimObjectHeader* prim_object_header, const SPrimMesh* prim_mesh, const SPrimSubMesh* prim_submesh);
 
 		[[nodiscard]] std::vector<float> getCanonicalForm() const;
-		void setFromCanonicalForm(const std::vector<float>&);
 
 		BoundingBox<Vertex> getBoundingBox() const;
 
