@@ -3,6 +3,7 @@
 #include "BinaryWriter.hpp"
 #include "PrimBoundingBox.h"
 #include "Util.h"
+#include "IntegerRangeCompression.h"
 
 using namespace GlacierFormats;
 
@@ -83,8 +84,8 @@ namespace {
 			bitangents[i].z() = Decompress8BitFloat(br->read<uint8_t>());
 			bitangents[i].w() = Decompress8BitFloat(br->read<uint8_t>());
 
-			uvs[i].x() = static_cast<double>(br->read<short>())* prim_mesh->uv_scale[0] / 32767.0 + prim_mesh->uv_bias[0];
-			uvs[i].y() = static_cast<double>(br->read<short>())* prim_mesh->uv_scale[1] / 32767.0 + prim_mesh->uv_bias[1];
+			uvs[i].x() = IntegerRangeCompressor<short, float>::decompress(br->read<short>(), prim_mesh->uv_scale[0], prim_mesh->uv_bias[0]);
+			uvs[i].y() = IntegerRangeCompressor<short, float>::decompress(br->read<short>(), prim_mesh->uv_scale[1], prim_mesh->uv_bias[1]);
 		}
 	}
 
@@ -125,11 +126,8 @@ namespace {
 				bw->write(Compress8BitFloat(0.f));
 			}
 
-
-
-			//UV coordinates
-			bw->write(static_cast<short>(std::roundf(32767.0 * (uvs[i].x() - uv_bias[0]) / uv_scale[0])));//TODO: make generic integer range compression fn
-			bw->write(static_cast<short>(std::roundf(32767.0 * (uvs[i].y() - uv_bias[1]) / uv_scale[1])));
+			bw->write(IntegerRangeCompressor<short, float>::compress(uvs[i].x(), uv_scale[0], uv_bias[0]));
+			bw->write(IntegerRangeCompressor<short, float>::compress(uvs[i].y(), uv_scale[1], uv_bias[1]));
 		}
 	}
 
