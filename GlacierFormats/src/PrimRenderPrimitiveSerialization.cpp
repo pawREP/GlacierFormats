@@ -12,10 +12,30 @@ using namespace GlacierFormats;
 		RecordKey record_key{ typeid(void), 0};
 
 		SPrimSubMesh submesh{};
-
-		//Set inherited SPrimObject properties 
+		submesh.color1 = prim->remnant.submesh_color1;
 		submesh.properties = prim->remnant.submesh_properties;
+		//There are some PRIMs with submesh sub types that match the mesh sub types but
+		//that doesn't seem to be necessary. 
+		submesh.sub_type = SPrimObject::SUBTYPE::SUBTYPE_STANDARD;
+
 		submesh.num_uv_channels = 1;//TODO: Note multiple UV channels can now be supported when using the GLTF exchange format.
+
+		//TODO: Some prims serialize the collision data here while some others put it at the end of the object after cloth data.
+		//Do some testing to figure out why. Casual observation so far is that standard, use the col at end variant while linked use the col at start option
+		//Not sure about weighted.
+		//Collision
+		if (prim->collision_data) {
+			record_key = prim->collision_data->recordKey();
+			if (buffer_record.find(record_key) == buffer_record.end()) {
+				buffer_record[record_key] = bw->tell();
+				prim->collision_data->serialize(bw);
+			}
+			submesh.collision = buffer_record[record_key];
+		}
+		else {
+			submesh.collision = 0;
+		}
+		bw->align();
 
 		//Index Buffer
 		record_key = prim->index_buffer->recordKey();
@@ -41,9 +61,11 @@ using namespace GlacierFormats;
 			//Per Vertex Data
 			prim->vertex_data->serialize(bw);
 
-			//TODO: Add dummy data again, alternatively, add finalize() to PRIM
-			if (prim->vertex_colors)
-				prim->vertex_colors->serialize(bw);
+			if (!((int)submesh.properties & (int)SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1)) {
+				//TODO: Add dummy data again, alternatively, add finalize() to PRIM
+				if (prim->vertex_colors)
+					prim->vertex_colors->serialize(bw);
+			}
 		}
 		submesh.vertex_buffer = buffer_record[record_key];
 		submesh.num_vertex = prim->vertex_buffer->size();
@@ -64,17 +86,17 @@ using namespace GlacierFormats;
 		}
 		bw->align();
 
-		if (prim->collision_data) {
-			record_key = prim->collision_data->recordKey();
-			if (buffer_record.find(record_key) == buffer_record.end()) {
-				buffer_record[record_key] = bw->tell();
-				prim->collision_data->serialize(bw);
-			}
-			submesh.collision = buffer_record[record_key];
-		}
-		else {
-			submesh.collision = 0;
-		}
+		//if (prim->collision_data) {
+		//	record_key = prim->collision_data->recordKey();
+		//	if (buffer_record.find(record_key) == buffer_record.end()) {
+		//		buffer_record[record_key] = bw->tell();
+		//		prim->collision_data->serialize(bw);
+		//	}
+		//	submesh.collision = buffer_record[record_key];
+		//}
+		//else {
+		//	submesh.collision = 0;
+		//}
 
 		bw->align();
 
@@ -92,20 +114,26 @@ using namespace GlacierFormats;
 		auto submesh_table_offset = static_cast<uint32_t>(buffer_record[record_key]);
 
 		SPrimMeshWeighted prim_mesh{};
+		prim_mesh.sub_mesh_table = submesh_table_offset;
+
+		if (prim->copy_bones) {
+			prim_mesh.num_copy_bones = prim->copy_bones->copyBoneCount();
+			prim_mesh.copy_bones = bw->tell();
+			prim->copy_bones->serialize(bw);
+		}
+		bw->align();
 
 		if (prim->bone_info) {
-			prim_mesh.num_copy_bones = bw->tell();
+			prim_mesh.bone_info = bw->tell();
 			prim->bone_info->serialize(bw);
 		}
 		bw->align();
 
-		//if (prim->m_unk_tabl2) {
-		//	prim_mesh.m_unk_tabl2_offset = bw->tell();
-		//	prim->m_unk_tabl2->serialize(bw);
-		//}
+		if (prim->bone_indices) {
+			prim_mesh.bone_indices = bw->tell();
+			prim->bone_indices->serialize(bw);
+		}
 		bw->align();
-
-		prim_mesh.sub_mesh_table = submesh_table_offset;
 
 		vertex_buffer_bb.getIntegerRangeCompressionParameters(prim_mesh.pos_scale, prim_mesh.pos_bias);
 		prim_mesh.pos_scale[3] = 0.5; //The fourth entry in scale and bias has a hard coded value for some reason.
@@ -127,27 +155,22 @@ using namespace GlacierFormats;
 		}
 
 		prim_mesh.type = SPrimObjectHeader::EPrimType::PTMESH;
-		prim_mesh.sub_type = prim->remnant.mesh_subtype;
-		prim_mesh.properties = prim->remnant.mesh_properties;
-		if ((int)prim_mesh.properties & (int)SPrimObject::PROPERTY_FLAGS::PROPERTY_HIRES_POSITIONS)
-			(int&)prim_mesh.properties -= (int)SPrimObject::PROPERTY_FLAGS::PROPERTY_HIRES_POSITIONS;
 
 		prim_mesh.lod_mask = prim->remnant.lod_mask;
 		prim_mesh.variant_id = prim->remnant.variant_id;
 		prim_mesh.bias = prim->remnant.bias;
 		prim_mesh.offset = prim->remnant.offset;
 		prim_mesh.material_id = prim->remnant.material_id;
+		prim_mesh.sub_type = prim->remnant.mesh_subtype;
 
-		//TODO: Add bone stuff
 		uint32_t object_offset = static_cast<uint32_t>(bw->tell());
 
-		if ((prim->remnant.mesh_subtype == SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED) || (prim->remnant.mesh_subtype == SPrimObject::SUBTYPE::SUBTYPE_LINKED)) {
+		if ((prim_mesh.sub_type == SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED) || (prim_mesh.sub_type == SPrimObject::SUBTYPE::SUBTYPE_LINKED)) {
 			bw->write(prim_mesh);
 		}
 		else {
-			SPrimMesh m;
-			memcpy_s(&m, sizeof(m), &prim_mesh, sizeof(m));
-			bw->write(m);
+			auto m = static_cast<const SPrimMesh*>(&prim_mesh);
+			bw->write(*m);
 		}
 		bw->align();
 
@@ -169,7 +192,6 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 	default:
 		GLACIER_UNREACHABLE;
 	}
-
 	br->align();
 
 	br->seek(prim_mesh->sub_mesh_table);
@@ -184,15 +206,18 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 		throw UnsupportedFeatureException("Meshes with more than one UV channel are not supported.");
 
 	auto prim = std::make_unique<ZRenderPrimitive>();
-	prim->remnant.submesh_properties = prim_submesh.properties;
-	prim->remnant.mesh_properties = prim_mesh->properties;
 
-	//TODO: Add all the missing remnant values here
-	prim->remnant.wire_color = prim_mesh->wire_color;
-	prim->remnant.lod_mask = prim_mesh->lod_mask;
-	prim->remnant.material_id = prim_mesh->material_id;
-	prim->remnant.variant_id = prim_mesh->variant_id;
 	prim->remnant.mesh_subtype = prim_mesh->sub_type;
+	prim->remnant.lod_mask = prim_mesh->lod_mask;
+	prim->remnant.variant_id = prim_mesh->variant_id;
+	prim->remnant.bias = prim_mesh->bias;
+	prim->remnant.offset = prim_mesh->offset;
+	prim->remnant.material_id = prim_mesh->material_id;
+
+	prim->remnant.submesh_properties = prim_submesh.properties;
+	prim->remnant.submesh_color1 = prim_submesh.color1;
+
+	printf("mesh/sub c1: 0x%08X 0x%08X\n", prim_mesh->color1, prim_submesh.color1);
 
 	//Index buffer
 	br->seek(prim_submesh.index_buffer);
@@ -246,10 +271,12 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 	}
 	br->align();
 
-	//Bone indices
 	if (prim_mesh->sub_type != SPrimObject::SUBTYPE::SUBTYPE_STANDARD) {
 		auto prim_mesh_weigthed = reinterpret_cast<SPrimMeshWeighted*>(prim_mesh.get());
+
+		//Copy bones
 		if (prim_mesh_weigthed->num_copy_bones) {
+			GLACIER_ASSERT_TRUE(prim_mesh->sub_type == SPrimObject::SUBTYPE::SUBTYPE_LINKED);
 			GLACIER_ASSERT_TRUE(prim_mesh_weigthed->copy_bones);
 			br->seek(prim_mesh_weigthed->copy_bones);
 			prim->copy_bones = std::make_unique<CopyBones>(br, prim_mesh_weigthed->num_copy_bones);
@@ -261,7 +288,6 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 		}
 		br->align();
 
-		//MUnkTabl2
 		if (prim_mesh_weigthed->bone_indices) {
 			br->seek(prim_mesh_weigthed->bone_indices);
 			prim->bone_indices = std::make_unique<BoneIndices>(br);
