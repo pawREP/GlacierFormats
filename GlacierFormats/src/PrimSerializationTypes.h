@@ -91,7 +91,7 @@ namespace GlacierFormats {
 			PROPERTY_ZAXISLOCKED = 0x04,
 			PROPERTY_HIRES_POSITIONS = 0x08,	//Set for meshes that use 32 bit precision position data, instead of the default 16 bit precision.
 			PROPERTY_PS3_EDGE = 0x10,
-			PROPERTY_COLOR1 = 0x20,				//Set for meshes that do NOT contain vertex color data.
+			PROPERTY_COLOR1 = 0x20,				//Set for meshes that use color1 instead of per vertex colors.
 			PROPERTY_ISNOPHYSICSPROP = 0x40,
 		};
 
