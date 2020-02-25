@@ -97,11 +97,6 @@ using namespace GlacierFormats;
 		prim->remnant.lod_mask = lod_mask;
 	}
 
-	void ZRenderPrimitiveBuilder::setWireColor(unsigned int wire_color)
-	{
-		prim->remnant.wire_color = wire_color;
-	}
-
 	void ZRenderPrimitiveBuilder::setVariantId(char variant_id)
 	{
 		prim->remnant.variant_id = variant_id;
@@ -116,6 +111,9 @@ using namespace GlacierFormats;
 		prim->remnant.submesh_color1 = color1;
 	}
 
+	void GlacierFormats::ZRenderPrimitiveBuilder::setMeshSubtype(SPrimObject::SUBTYPE subtype) {
+		prim->remnant.mesh_subtype = subtype;
+	}
 
 	std::unique_ptr<ZRenderPrimitive> ZRenderPrimitiveBuilder::build() {
 		validate();
