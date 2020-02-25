@@ -112,6 +112,10 @@ using namespace GlacierFormats;
 		prim->remnant.material_id = material_id;
 	}
 
+	void GlacierFormats::ZRenderPrimitiveBuilder::setColor1(uint32_t color1) {
+		prim->remnant.submesh_color1 = color1;
+	}
+
 
 	std::unique_ptr<ZRenderPrimitive> ZRenderPrimitiveBuilder::build() {
 		validate();

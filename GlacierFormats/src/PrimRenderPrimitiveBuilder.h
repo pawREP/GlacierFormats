@@ -33,11 +33,13 @@ namespace GlacierFormats {
 		void setBoneInfo(std::unique_ptr<BoneInfo> bone_info);
 		void setBoneIndices(std::unique_ptr<BoneIndices> m2);
 
+		//TODO: ONly sets submesh properties. 
 		void setPropertyFlags(SPrimObject::PROPERTY_FLAGS flags);
 		void setLodMask(unsigned char lod_mask);
 		void setWireColor(unsigned int wire_color);
 		void setVariantId(char variant_id);
 		void setMaterialId(short material_id);
+		void setColor1(uint32_t color1);
 
 		std::unique_ptr<ZRenderPrimitive> build();
 	};
