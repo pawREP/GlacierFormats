@@ -213,6 +213,9 @@ void CreateMeshPrimitveResources(BufferBuilder& buffer_builder, const GlacierFor
     //Tangents
     buffer_builder.AddBufferView();
     auto tangents = mesh->getTangents();
+        //set handedness
+    for (int i = 3; i < tangents.size(); i += 4)
+        tangents[i] = 1.f;
     ctx.tangent_acc = buffer_builder.AddAccessor(tangents, { TYPE_VEC4, COMPONENT_FLOAT }).id;
 
     //Texture coordinates
