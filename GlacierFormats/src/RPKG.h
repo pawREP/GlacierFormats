@@ -82,7 +82,7 @@ namespace GlacierFormats {
 
 		std::unordered_map<uint64_t, PkgFile*> runtime_id_map;
 
-		RPKG(BinaryReader* br);
+		RPKG(const std::filesystem::path& path);
 		RPKG();
 
 		bool operator<(const RPKG& rpkg) const;

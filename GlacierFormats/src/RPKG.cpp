@@ -16,6 +16,7 @@ using namespace GlacierFormats;
 #define TYPE_STR_LEN 4
 
 	//TODO: not entirely safe, might read oob in very small files.
+//TODO: Implement properly
 	RPKG_TYPE RPKG::guessArchiveType(BinaryReader& br) {
 		if (br.size() <= 0x10) //return early on empty (header only) RPKGs. sh. dlc7.rpkg
 			return RPKG_TYPE::BASE;
@@ -126,13 +127,13 @@ using namespace GlacierFormats;
 		}
 	}
 
-	RPKG::RPKG(BinaryReader* br_){
-		br = std::unique_ptr<BinaryReader>(br_);
+	RPKG::RPKG(const std::filesystem::path& path){
+		br = std::make_unique<BinaryReader>(path);
 
 		archive_type = guessArchiveType(*br);
 
 		//header.read(br, archive_type);
-		//assert(("RPKG header magic is wrong", br.readString<TYPE_STR_LEN, Endianness::LE>() == "RPKG"));
+		GLACIER_ASSERT_TRUE((br->readString<4, BinaryReader::Endianness::LE>() == "RPKG"));
 
 		uint32_t file_count = br->read<uint32_t>();
 		uint32_t entry_info_block_size = br->read<uint32_t>();
