@@ -27,28 +27,16 @@ namespace GlacierFormats {
 		friend class ZRenderPrimitiveBuilder;
 		friend class RenderPrimitiveSerializer;
 
-		//TODO: remnant should be exported into a manifest or embeded into the expoted mesh. Current implementation relys on reading 
-		//some of the remnant data from the ResourceRepo, or the props are guessed.
 		struct {
-			SPrimObject::SUBTYPE mesh_subtype = static_cast<SPrimObject::SUBTYPE>(0);
-			SPrimObject::PROPERTY_FLAGS submesh_properties = static_cast<SPrimObject::PROPERTY_FLAGS>(0);
-			SPrimObject::PROPERTY_FLAGS mesh_properties = static_cast<SPrimObject::PROPERTY_FLAGS>(0);
-			//For exporting the only relevant property is PROPERTY_COLOR1. Which has to be set on export for meshes that
-			//natively use this property. Otherwise meshes will appear in-game in a weird purple color. 
-
-			unsigned char lod_mask = 1;
-			//Mask that indicates lod range for submesh model, one bit per lod range. Higher bits indicate farther draw distance.
-			//0 invis
-			//1 shorter than cam range vis, 
-			//2 visible between 0.5-3 cam ranges.
-
+			SPrimObject::SUBTYPE mesh_subtype = SPrimObject::SUBTYPE::SUBTYPE_STANDARD;
+			unsigned char lod_mask = 0xFF;
 			char variant_id = 0;
 			char bias = 0;
 			char offset = 0;
 			short material_id = 0;
-			int wire_color = 0;
-			int debug_color = 0;
-			float unk17 = 0;
+
+			SPrimObject::PROPERTY_FLAGS submesh_properties = SPrimObject::PROPERTY_FLAGS::NONE;
+			int submesh_color1 = 0;
 		} remnant;
 
 		std::unique_ptr<VertexBuffer> vertex_buffer;
