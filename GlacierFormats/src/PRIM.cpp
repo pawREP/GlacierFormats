@@ -25,7 +25,6 @@ using namespace GlacierFormats;
 		br.seek(primary_offset);
 		SPrimObjectHeader prim_object_header = br.read<SPrimObjectHeader>();
 
-
 		//SPrimObjectHeader should always be at the end of the resource file. The only exception are speedtree meshes which aren't supported.
 		//This test is not sufficient and could be avoided by simply not aligning but that would mess with the read coverage debug reader.
 		if(br.size() != br.tell() + 4)
@@ -34,7 +33,6 @@ using namespace GlacierFormats;
 		prim_object_header.Assert();
 		GLACIER_ASSERT_TRUE(prim_object_header.type == SPrimHeader::EPrimType::PTOBJECTHEADER);
 		br.align();
-
 
 
 		if (((int)prim_object_header.property_flags & (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_FRAMES) != (int)SPrimObjectHeader::PROPERTY_FLAGS::HAS_FRAMES) {
@@ -77,11 +75,10 @@ using namespace GlacierFormats;
 	}
 
 	PRIM::PRIM(const std::vector<IMesh*>& meshes, RuntimeId id, std::function<void(ZRenderPrimitiveBuilder&, const std::string&)>* build_modifier) : GlacierResource<PRIM>(id) {
-		//TODO:Initilize manifest
 		for (const auto& mesh : meshes) {
 			ZRenderPrimitiveBuilder builder;
 			builder.initilizeFromIMesh(mesh);
-
+			//TODO: Add vertex colors
 			if (build_modifier)
 				(*build_modifier)(builder, mesh->name());
 
@@ -105,19 +102,23 @@ using namespace GlacierFormats;
 		return false;
 	}
 
-
-
 	void PRIM::serialize(BinaryWriter& bw) {
 		std::vector<uint32_t> object_table;
 
 		bw.write(-1);//header offset placeholder
 		bw.align();
 
-		//Record of serialized resources. Used for buffer reuse support.
-		//key: pair of type if of serialized record and std::hash of resource
+		//Record of serialized resource buffers. Used for buffer reuse support.
+		//key: pair of typeid of serialized record and std::hash of resource buffer
 		//value: offset to resource.
 		std::unordered_map<RecordKey, uint64_t> buffer_records;
 
+		//TODO:
+		//The orginal format also supports the reuse of entire primitives by
+		//pointing the submesh table entry to an existing submesh
+		//In this case only the PrimMesh struct is serialized. 
+		//This optimization is currently not supported in this reimplementation of the serializer
+		//Impl operator== for prim and all it's logical subtypes.
 		for (const auto& prim : primitives) {
 			auto off = prim->serialize(&bw, buffer_records);
 			object_table.push_back(off);
