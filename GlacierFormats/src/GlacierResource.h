@@ -76,11 +76,8 @@ namespace GlacierFormats {
 	}
 
 	template<typename T>
-	inline std::string GlacierResource<T>::name() const
-	{
-		char str_buf[0x16];
-		sprintf_s(str_buf, "%I64X", static_cast<uint64_t>(id));
-		return std::string(str_buf);
+	inline std::string GlacierResource<T>::name() const	{
+		return id;
 	}
 
 }
