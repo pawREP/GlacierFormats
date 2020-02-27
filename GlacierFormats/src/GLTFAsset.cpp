@@ -169,10 +169,17 @@ GLTFAsset::GLTFAsset(const std::filesystem::path& path, const std::unordered_map
             //TODO: Error handling for missing normals, tangents, tex coords.
             //tangents
             GLACIER_ASSERT_TRUE(primitive.TryGetAttributeAccessorId(ACCESSOR_TANGENT, accessor_id));
+            if (primitive.TryGetAttributeAccessorId(ACCESSOR_TANGENT, accessor_id))
             {
                 const Accessor& accessor = document.accessors.Get(accessor_id);
                 auto tangent_data = resourceReader->ReadBinaryData<float>(document, accessor);
                 gltf_mesh->setTangents(std::move(tangent_data));
+            }else{
+                //TODO: ungly ugly ugly hack
+                const Accessor& accessor = document.accessors.Get(accessor_id);
+                auto normal_data = resourceReader->ReadBinaryData<float>(document, accessor);
+                std::vector<float> tangents(normal_data.size() / 3 * 4);
+                gltf_mesh->setTangents(std::move(tangents));
             }
 
             //bone data
