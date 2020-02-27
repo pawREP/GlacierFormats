@@ -66,7 +66,7 @@ using namespace GlacierFormats;
 				if (prim->vertex_colors)
 					prim->vertex_colors->serialize(bw);
 				else {
-					//Write dummy colors.
+					//Write dummy colors if the model needs colors but doesn't have them.
 					VertexColors colors(prim->vertex_buffer->size());
 					colors.serialize(bw);
 				}
