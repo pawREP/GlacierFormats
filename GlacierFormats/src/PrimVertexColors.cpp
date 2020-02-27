@@ -4,8 +4,8 @@
 
 using namespace GlacierFormats;
 
-	VertexColors::VertexColors(int size) noexcept {
-		colors = std::vector<unsigned char>(size, 0xFF);
+	VertexColors::VertexColors(int vertex_count) noexcept {
+		colors = std::vector<unsigned char>(4* vertex_count, 0xFF);
 	}
 
 	VertexColors::VertexColors(BinaryReader* br, const SPrimSubMesh* prim_submesh) {

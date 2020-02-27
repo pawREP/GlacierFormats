@@ -62,9 +62,14 @@ using namespace GlacierFormats;
 			prim->vertex_data->serialize(bw);
 
 			if (!((int)submesh.properties & (int)SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1)) {
-				//TODO: Add dummy data again, alternatively, add finalize() to PRIM
+				
 				if (prim->vertex_colors)
 					prim->vertex_colors->serialize(bw);
+				else {
+					//Write dummy colors.
+					VertexColors colors(prim->vertex_buffer->size());
+					colors.serialize(bw);
+				}
 			}
 		}
 		submesh.vertex_buffer = buffer_record[record_key];
