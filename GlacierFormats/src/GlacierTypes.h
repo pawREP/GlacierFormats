@@ -13,10 +13,14 @@ namespace GlacierFormats {
 	private:
 		uint64_t id;
 	public:
-
+		//TODO: Add static isRuntimeIdString(const std::string& to avoid throwing in constructor if invalid string is passed.)
 		RuntimeId() : id(0xFFFFFFFFFFFFFFFF) {};
 		RuntimeId(uint64_t id) : id(id) {}
-		RuntimeId(const std::string& id_string) : id(std::stoull(id_string, nullptr, 16)) {}
+		RuntimeId(const std::string& id_string) : id(0) {
+			if (id_string.find_first_not_of("0123456789abcdefABCDEF", 0) != std::string::npos)
+				return; //invalid input string.
+			id = std::stoull(id_string, nullptr, 16);
+		}
 		RuntimeId(const char* id_string) : RuntimeId(std::string(id_string)) {}
 
 		operator uint64_t() const { return id; }
