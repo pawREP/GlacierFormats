@@ -76,6 +76,7 @@ std::filesystem::path findHitmanTwoRuntimeDirectoryPath() {
 	getSteamLibraryFolders(steam_install_path, library_folders);
 	for (const auto& library_folder : library_folders) {
 		runtime_dir = library_folder / runtime_folder_extension;
+		runtime_dir = runtime_dir.lexically_normal();
 		if (std::filesystem::exists(runtime_dir))
 			return runtime_dir;
 	}
