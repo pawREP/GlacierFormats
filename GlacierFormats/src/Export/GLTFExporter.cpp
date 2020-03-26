@@ -446,8 +446,11 @@ void GLTFExporter::operator()(const GlacierFormats::IRenderAsset& model, const s
     auto file_name = std::filesystem::path(model.name() + "." + extension);
 
     std::unique_ptr<ResourceWriter> resource_writer;
-    if (extension == GLTF_EXTENSION)
-        resource_writer = std::make_unique<GLTFResourceWriter>(std::move(stream_writer));
+    if (extension == GLTF_EXTENSION) {
+        auto gltf_resource_writer = new GLTFResourceWriter(std::move(stream_writer));
+        gltf_resource_writer->SetUriPrefix(model.name() + "_");
+        resource_writer = std::unique_ptr<ResourceWriter>(gltf_resource_writer);
+    }
     else
         resource_writer = std::make_unique<GLBResourceWriter>(std::move(stream_writer));
 
