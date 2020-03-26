@@ -440,28 +440,13 @@ std::string CreateMeshPrimitiveEntities(const GlacierFormats::IMesh* mesh, const
     return document.nodes.Append(std::move(mesh_node), AppendIdPolicy::GenerateOnEmpty).id;
 }
 
-//TODO: Remove GLB code, this will never be used.
 void GLTFExporter::operator()(const GlacierFormats::IRenderAsset& model, const std::filesystem::path& path) const {
     auto stream_writer = std::make_unique<StreamWriter>(path);
-
-    auto extension = GLTF_EXTENSION;//TODO: Externalize
-    auto file_name = std::filesystem::path(model.name() + "." + extension);
-
-    std::unique_ptr<ResourceWriter> resource_writer;
-    if (extension == GLTF_EXTENSION) {
-        auto gltf_resource_writer = new GLTFResourceWriter(std::move(stream_writer));
-        gltf_resource_writer->SetUriPrefix(model.name() + "_");
-        resource_writer = std::unique_ptr<ResourceWriter>(gltf_resource_writer);
-    }
-    else
-        resource_writer = std::make_unique<GLBResourceWriter>(std::move(stream_writer));
+    auto resource_writer = std::make_unique<GLTFResourceWriter>(std::move(stream_writer));
+    resource_writer->SetUriPrefix(model.name() + "_");
 
     BufferBuilder buffer_builder(std::move(resource_writer));
-
-    if (extension == GLTF_EXTENSION)
-        buffer_builder.AddBuffer();
-    else
-        buffer_builder.AddBuffer(GLB_BUFFER_ID);
+    buffer_builder.AddBuffer();
 
     Document document;
     Scene scene;
@@ -515,20 +500,18 @@ void GLTFExporter::operator()(const GlacierFormats::IRenderAsset& model, const s
         throw std::runtime_error("GLTF validation failed: " + std::string(e.what()));
     }
 
-    std::string manifest;
-
     try {
+        std::string manifest;
+        auto file_name = std::filesystem::path(model.name() + "." + GLTF_EXTENSION);
+        
         auto extension_serializer = KHR::GetKHRExtensionSerializer();//Only required when exporting GlossSpec materials.
         manifest = Serialize(document, extension_serializer, SerializeFlags::Pretty);
+
+        buffer_builder.GetResourceWriter().WriteExternal(file_name.u8string(), manifest);
     }
     catch (const GLTFException & e) {
         throw std::runtime_error("GLTF serialization failed: " + std::string(e.what()));
     }
-
-    if (extension != GLTF_EXTENSION)
-        dynamic_cast<GLBResourceWriter*>(resource_writer.get())->Flush(manifest, file_name.u8string());
-    else
-        buffer_builder.GetResourceWriter().WriteExternal(file_name.u8string(), manifest);
 }
 
 void GlacierFormats::Export::GLTFExporter::operator()(const IMesh& mesh, const std::filesystem::path& export_dir) const {
