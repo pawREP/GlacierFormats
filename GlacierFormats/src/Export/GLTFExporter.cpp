@@ -374,6 +374,7 @@ std::string CreateMetalRoughMaterial(Document& document, std::string* albedo, st
 
 constexpr bool USE_SPEC_GLOSS_EXT = false;
 
+//TODO: The material system isn't understood well enough to make this very useful just yet. Avoid.
 std::string CreateMaterial(Document& document, const GlacierFormats::IMaterial* src_material) {
     //TODO: Externalize this fixed extention and think about the texture situation. 
     //GLTF doesn't officially support tga and most viewers ignore the textures. Blender thankfully doesn't. 
@@ -439,6 +440,7 @@ std::string CreateMeshPrimitiveEntities(const GlacierFormats::IMesh* mesh, const
     return document.nodes.Append(std::move(mesh_node), AppendIdPolicy::GenerateOnEmpty).id;
 }
 
+//TODO: Remove GLB code, this will never be used.
 void GLTFExporter::operator()(const GlacierFormats::IRenderAsset& model, const std::filesystem::path& path) const {
     auto stream_writer = std::make_unique<StreamWriter>(path);
 
