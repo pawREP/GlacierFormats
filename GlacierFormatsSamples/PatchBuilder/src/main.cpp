@@ -23,9 +23,10 @@ int main(int argc, char** argv) {
 			continue;
 
 		auto file_path = file.path();
-
-		auto id = RuntimeId(file_path.stem().generic_string());
-
+		RuntimeId id(file_path.stem().generic_string()); 
+		if (id == 0)
+			continue;
+		
 		std::ifstream ifs(file_path.generic_string(), std::ios::binary);
 		auto data_size = std::filesystem::file_size(file_path);
 		char* data = new char[data_size];
