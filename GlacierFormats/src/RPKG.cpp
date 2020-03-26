@@ -200,7 +200,7 @@ using namespace GlacierFormats;
 		pkg.entry_descriptor.mem_size = data_size;
 		pkg.entry_descriptor.video_mem_size = -1;
 		pkg.entry_descriptor.type = type;
-		pkg.data->resize(data_size);
+		pkg.data = std::make_unique<std::vector<char>>(data_size);
 		std::copy(data, &data[data_size], pkg.data->data());
 
 		std::vector<ResourceReference> default_references;
@@ -214,7 +214,7 @@ using namespace GlacierFormats;
 		pkg.entry_descriptor.dependency_table_ordering = 3;
 		pkg.entry_descriptor.dependency_descriptor_size = references->size() * 9 + 4;
 
-		files.push_back(pkg);
+		files.push_back(std::move(pkg));
 
 		rebuildFileDataOffsets();
 	}
