@@ -17,6 +17,8 @@ namespace GlacierFormats {
 		RuntimeId() : id(0xFFFFFFFFFFFFFFFF) {};
 		RuntimeId(uint64_t id) : id(id) {}
 		RuntimeId(const std::string& id_string) : id(0) {
+			if (id_string == "")
+				return;
 			if (id_string.find_first_not_of("0123456789abcdefABCDEF", 0) != std::string::npos)
 				return; //invalid input string.
 			id = std::stoull(id_string, nullptr, 16);
