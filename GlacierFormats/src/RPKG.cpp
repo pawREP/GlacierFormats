@@ -153,14 +153,11 @@ using namespace GlacierFormats;
 
 		for (auto& file : files) {
 			runtime_id_map.insert({ file.entry_info.runtimeID, &file });
-			file.rawData = nullptr;
+			file.data = nullptr;
 		}
-
-
-		//printf("%s", br.getCoverageReport().c_str());
 	}
 
-	const PkgFile* RPKG::getFileByRuntimeId(uint64_t runtime_id) {
+	const PkgFile* RPKG::getFileByRuntimeId(RuntimeId runtime_id) {
 		auto it = runtime_id_map.find(runtime_id);
 		if (it == runtime_id_map.end())
 			return nullptr;
@@ -181,26 +178,15 @@ using namespace GlacierFormats;
 		}
 	};
 
-	//transfers ownership of new_data to PkgFile with given runtime id, if it exists in the rpkg.
-	void RPKG::overrideFile(uint64_t runtime_id, char* new_data, size_t new_data_size) {
-		auto it = std::find_if(files.begin(), files.end(), [&](const PkgFile& f) {return f.entry_info.runtimeID == runtime_id; });
-		if (it == files.end())
-			throw; // tried to override file that doesn't exist in rpkg.
-
-		it->rawData = new_data;
-		it->entry_descriptor.size = new_data_size;
-		it->entry_info.compressed_size = 0;
-		it->entry_info.is_compressed = false;
-		it->entry_info.is_encrypted = false;
-
-		rebuildFileDataOffsets();
-	}
-
 	//TODO: Split RPKG completely into classes dedicated for reading/viewer and patch building. 
 	//The requirements for each use case are so distinct it makes the current implementation needlessly cumbersome, slow, surprising and ugly. We can do better than that.
 
+	void RPKG::insertFile(RuntimeId runtime_id, const std::string& type, const std::vector<char>& data, const std::vector<ResourceReference>* references) {
+		insertFile(runtime_id, type, data.data(), data.size(), references);
+	}
+
 	//transfers ownership of data ptr to RPKG
-	void RPKG::insertFile(uint64_t runtime_id, const std::string type, char* data, size_t data_size, const std::vector<ResourceReference>* references) {
+	void RPKG::insertFile(RuntimeId runtime_id, const std::string& type, const char* data, size_t data_size, const std::vector<ResourceReference>* references) {
 		auto it = std::find_if(files.begin(), files.end(), [&](const PkgFile& f) {return f.entry_info.runtimeID == runtime_id; });
 		if (it != files.end())
 			return; //TODO: Re-evaluate what the best behaviour is for this case. Import routines of models with materials that reuse textures might trigger this path.
@@ -214,7 +200,8 @@ using namespace GlacierFormats;
 		pkg.entry_descriptor.mem_size = data_size;
 		pkg.entry_descriptor.video_mem_size = -1;
 		pkg.entry_descriptor.type = type;
-		pkg.rawData = data;
+		pkg.data->resize(data_size);
+		std::copy(data, &data[data_size], pkg.data->data());
 
 		std::vector<ResourceReference> default_references;
 		if (!references) {
@@ -302,7 +289,7 @@ using namespace GlacierFormats;
 
 		for (auto& f : files) {
 			size_t data_size = 0;
-			if (f.rawData == nullptr) {
+			if (f.data == nullptr) {
 				if (f.entry_info.is_compressed) {
 					data_size = f.entry_info.compressed_size;
 				}
@@ -310,26 +297,27 @@ using namespace GlacierFormats;
 					data_size = f.entry_descriptor.size;
 				}
 
-				f.rawData = new char[data_size];
+				f.data = std::make_unique<std::vector<char>>(data_size);
 				br->seek(f.entry_info.data_offset);
-				br->read(f.rawData, data_size);
+				br->read(f.data->data(), f.data->size());
 
+				bw.seek(current_data_offset);
+				bw.write(f.data->data(), f.data->size());
+
+				f.entry_info.data_offset = current_data_offset;
+				current_data_offset += data_size;
+
+				f.data.reset(nullptr);
 			}
 			else {
 				data_size = f.entry_descriptor.size;
-			}
-			//auto dif = current_data_offset - bw.tell();
-			//if (dif != 0) {
-			//	for (int i = 0; i < dif; ++i)
-			//		bw.write('0');
-			//	assert(bw.tell() == current_data_offset);
-			//}
-			bw.seek(current_data_offset);
-			bw.write(f.rawData, data_size);
-			//delete[] f.rawData;//TODO:yikes, Fix the leaking/ownership issue assoziated with RPKG file insertion.
 
-			f.entry_info.data_offset = current_data_offset;
-			current_data_offset += data_size;
+				bw.seek(current_data_offset);
+				bw.write(f.data->data(), f.data->size());
+
+				f.entry_info.data_offset = current_data_offset;
+				current_data_offset += data_size;
+			}
 		}
 
 		bw.seek(getEntryInfoSectionOffset());
@@ -378,7 +366,7 @@ using namespace GlacierFormats;
 		//return file.entry_descriptor.size;
 	}
 
-	size_t RPKG::getFileData(const uint64_t& id, char** dst_buf) {
+	size_t RPKG::getFileData(RuntimeId id, char** dst_buf) {
 		const PkgFile* file = getFileByRuntimeId(id);
 		size_t data_offset = file->entry_info.data_offset;
 		size_t data_size = file->entry_descriptor.size;
