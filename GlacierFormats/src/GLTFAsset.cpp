@@ -168,7 +168,7 @@ GLTFAsset::GLTFAsset(const std::filesystem::path& path, const std::unordered_map
             }
             //TODO: Error handling for missing normals, tangents, tex coords.
             //tangents
-            GLACIER_ASSERT_TRUE(primitive.TryGetAttributeAccessorId(ACCESSOR_TANGENT, accessor_id));
+            //GLACIER_ASSERT_TRUE(primitive.TryGetAttributeAccessorId(ACCESSOR_TANGENT, accessor_id));
             if (primitive.TryGetAttributeAccessorId(ACCESSOR_TANGENT, accessor_id))
             {
                 const Accessor& accessor = document.accessors.Get(accessor_id);
@@ -193,7 +193,12 @@ GLTFAsset::GLTFAsset(const std::filesystem::path& path, const std::unordered_map
                 for (int joint_index = 0; joint_index < skin.jointIds.size(); ++joint_index) {
                     const auto joint_id = skin.jointIds[joint_index];
                     const auto& joint_node = document.nodes.Get(joint_id);
-                    bone_remapping[joint_index] = bone_name_to_index_map->at(joint_node.name);
+                    try {
+                        bone_remapping[joint_index] = bone_name_to_index_map->at(joint_node.name);
+                    }
+                    catch (...) {
+                        throw std::runtime_error("GLTF Import: GlTF skeleton doesn't match the skeleton of the import target.");
+                    }
                 }
 
                 accessor_id = primitive.GetAttributeAccessorId(ACCESSOR_JOINTS_0);
@@ -212,9 +217,6 @@ GLTFAsset::GLTFAsset(const std::filesystem::path& path, const std::unordered_map
                 const auto influnces = 4;
                 assert((joints_data.size() / influnces) == vertex_count);
 
-                
-                //TODO: Weight and joint data has to be reordered to match the original bone ids of the render mesh this Asset corresponds to.
-                //Read borg and generate mapping between bone ids based on matching bone names.
                 std::vector<IMesh::BoneWeight> bone_weights;
                 bone_weights.reserve(vertex_count * influnces);
                 for (int i = 0; i < joints_data.size(); ++i) {
