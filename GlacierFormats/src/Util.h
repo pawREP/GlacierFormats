@@ -28,6 +28,8 @@ namespace GlacierFormats {
 		std::string incrementArchiveName(const std::string& archiveName);
 
 		bool isRuntimeIdString(const std::string& str);
+
+		void mergePatchFiles(std::vector<std::string> in_patch_file_paths, std::string out_patch_file_path);
 	}
 
 }

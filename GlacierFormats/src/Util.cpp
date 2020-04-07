@@ -1,7 +1,13 @@
 #include "Util.h"
 #include "ResourceRepository.h"
 #include "BORG.h"
+#include "RPKG.h"
+
 #include <regex>
+#include <fstream>
+#include <filesystem>
+
+using namespace GlacierFormats;
 
 //Dev only function. Returns hash usd for install-time resource identification
 uint32_t GlacierFormats::Util::meshInstallDebugHookHash(RuntimeId id) {
@@ -47,4 +53,28 @@ bool GlacierFormats::Util::isRuntimeIdString(const std::string& str) {
 		return false;
 	}
 	return true;
+}
+
+void GlacierFormats::Util::mergePatchFiles(std::vector<std::string> in_patch_file_paths, std::string out_patch_file_path) {
+	RPKG out_patch;
+
+	for (const auto& in_patch_path : in_patch_file_paths) {
+		if (!std::filesystem::exists(in_patch_path) || !std::filesystem::is_regular_file(in_patch_path))
+			throw std::runtime_error("Invalid in path");
+
+		RPKG in_patch(in_patch_path);
+		for (const auto& file : in_patch.files) {
+			auto id = file.entry_info.runtimeID;
+			auto type = file.entry_descriptor.type;
+			auto refs = file.entry_descriptor.references;
+			char* data;
+			auto size = in_patch.getFileData(id, &data);
+
+			out_patch.insertFile(id, type, data, size, &refs);
+			for (const auto& del_entry : in_patch.deletion_list)
+				out_patch.deletion_list.push_back(del_entry);
+		}
+	}
+
+	out_patch.write(out_patch_file_path);
 }
