@@ -61,14 +61,14 @@ namespace GlacierFormats {
 	private:
 		std::unique_ptr<char[]> owned_read_buffer;
 
-		char* read_buffer;
+		const char* read_buffer;
 		int64_t buffer_size;
 		int64_t cur;
 
 	public:
 
 		//Non owning constructor
-		BinaryReaderBufferSource(char* data, int64_t data_size) {
+		BinaryReaderBufferSource(const char* data, int64_t data_size) {
 			owned_read_buffer = nullptr;
 			read_buffer = data;
 			buffer_size = data_size;
@@ -156,7 +156,7 @@ namespace GlacierFormats {
 		}
 
 		//Doesn't transfer ownership of data.
-		BinaryReader(char* data, int64_t data_size) {
+		BinaryReader(const char* data, int64_t data_size) {
 			source = std::make_unique<BinaryReaderBufferSource>(data, data_size);
 		}
 

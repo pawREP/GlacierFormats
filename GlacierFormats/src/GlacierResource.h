@@ -40,6 +40,16 @@ namespace GlacierFormats {
 			return std::make_unique<T>(br, id);
 		}
 
+		static std::unique_ptr<T> readFromBuffer(const char* buf, size_t buf_len, RuntimeId id) {
+			BinaryReader br(buf, buf_len);
+			return std::make_unique<T>(br, id);
+		}
+
+		static std::unique_ptr<T> readFromBuffer(const std::vector<char>& buf, RuntimeId id) {
+			BinaryReader br(buf.data(), buf.size());
+			return std::make_unique<T>(br, id);
+		}
+
 		void serializeToFile(const std::filesystem::path& file_path) {
 			BinaryWriter bw(file_path);
 			reinterpret_cast<T*>(this)->serialize(bw);
