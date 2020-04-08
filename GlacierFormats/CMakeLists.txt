@@ -20,18 +20,6 @@ link_directories(${GLTF_DIR}/GLTFSDK/$(Configuration))
 
 # add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
-#FBX
-set(GLACIERFORMATS_FBX_SDK_PATH " " CACHE FILEPATH "Path to FBX SDK. For example: ...FBX/FBX SDK/2020.0.1")
-if(${GLACIERFORMATS_FBX_SDK_PATH} STREQUAL " ")
-	message( FATAL_ERROR "Could not find FBX SDK. Please specify the GLACIERFORMATS_FBX_SDK_PATH variable. Example: /"...FBX/FBX SDK/2020.0.1/"" )
-endif()
-
-#set(GLACIERFORMATS_FBX_SDK_PATH "E:/Autodesk/FBX/FBX SDK/2020.0.1")
-set(FBX_SDK_INCLUDE_PATH "${GLACIERFORMATS_FBX_SDK_PATH}/include")
-set(FBX_SDK_LINK_PATH "${GLACIERFORMATS_FBX_SDK_PATH}/lib/vs2017/$(PlatformShortName)/$(Configuration)")
-include_directories(${FBX_SDK_INCLUDE_PATH})
-link_directories(${FBX_SDK_LINK_PATH})
-
 #set(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
 file (GLOB_RECURSE SRCFILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -40,7 +28,6 @@ add_library(${PROJECT_NAME} ${SRCFILES})
 target_link_libraries(${PROJECT_NAME} INTERFACE DirectXTex)
 target_link_libraries(${PROJECT_NAME} INTERFACE ${LZ4_LIB_NAME})
 target_link_libraries(${PROJECT_NAME} INTERFACE GLTFSDK)
-#target_link_libraries(${PROJECT_NAME} PRIVATE libfbxsdk)
 target_link_directories(${PROJECT_NAME} INTERFACE ${LZ4_LIB_PATH})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
