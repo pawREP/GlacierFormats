@@ -242,7 +242,7 @@ void CreateMeshPrimitveResources(BufferBuilder& buffer_builder, const GlacierFor
             if (w.vertex_id == vert_id) {
                 assert(slot_idx < influence_count);
                 joints[vert_id * influence_count + slot_idx] = static_cast<short>(w.bone_id);//TODO: IMesh interface should be changed to emmit short since PRIM only supports short anyway.
-                weights[vert_id * influence_count + slot_idx] = w.weight;
+                weights[vert_id * influence_count + slot_idx] = w.weights;
                 slot_idx++;
             }
         }

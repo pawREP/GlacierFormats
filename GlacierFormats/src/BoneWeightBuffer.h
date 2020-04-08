@@ -11,36 +11,43 @@ namespace GlacierFormats {
 	class BinaryReader;
 	class BinaryWriter;
 
-	struct BoneWeight {//TODO: rename to vertex weights? Maybe rework this struct all together, IO is kind of ugly
+	//Collection of influences or a single vertex
+	struct VertexWeights {
 	public:
-		Vec<float, 4> weight;
-		Vec<unsigned char, 4> bone_id;
-		float c; //This term seems to be related to cloth simulation. Should be nulled if the cloth data buffer is removed from a native model, 
-				//failing to do so results in some ugly vertex displacements.
 
-		BoneWeight();
-		BoneWeight(BinaryReader* br);
+		//Max number of influences per vertex
+		constexpr static unsigned int size = 6;
+
+		Vec<float, size> weights;
+		Vec<unsigned char, size> bone_ids;
+
+		VertexWeights();
+		VertexWeights(BinaryReader* br);
 		void serialize(BinaryWriter* bw) const;
+
+		bool operator==(const VertexWeights& other) const;
+
+	private:
+		constexpr static int base_weight_count = 4;
+		constexpr static int extended_weight_count = size - base_weight_count;
+
 	};
 
-	class BoneWeightBuffer
-	{
-		std::vector<BoneWeight> weights;
+	class VertexWeightBuffer {
+
+		std::vector<VertexWeights> weights;
 
 	public:
-		BoneWeightBuffer();
-		BoneWeightBuffer(BinaryReader* br, const SPrimSubMesh* prim_submesh);
+		VertexWeightBuffer();
+		VertexWeightBuffer(BinaryReader* br, const SPrimSubMesh* prim_submesh);
 		void serialize(BinaryWriter* bw) const;
 
-		size_t size() const;
-		auto begin() const;
-		auto end() const;
+		std::vector<IMesh::VertexWeight> getCanonicalForm() const;
+		void setFromCanonicalForm(int vertex_count, const std::vector<IMesh::VertexWeight>& weights);
 
-		std::vector<IMesh::BoneWeight> getCanonicalForm() const;
-		void setFromCanonicalForm(int vertex_count, const std::vector<IMesh::BoneWeight>& weights);
-
-		BoneWeight& operator[](uint32_t idx);
-		const BoneWeight& operator[](uint32_t idx) const;
+		VertexWeights& operator[](uint32_t idx);
+		const VertexWeights& operator[](uint32_t idx) const;
+		bool operator==(const VertexWeightBuffer& other) const;
 	};
 
 }

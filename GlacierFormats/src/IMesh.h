@@ -9,12 +9,12 @@ namespace GlacierFormats {
 	//conversion to and from other mesh formats that implement it.
 	class IMesh	{
 	public:
-		struct BoneWeight {
+		struct VertexWeight {
 			int vertex_id;
 			int bone_id;
-			float weight;
+			float weights;
 
-			bool operator<(const BoneWeight& other) { return this->weight < other.weight; }
+			bool operator<(const VertexWeight& other) { return this->weights < other.weights; }
 		};
 
 		static constexpr int vertex_size = 3;
@@ -31,7 +31,7 @@ namespace GlacierFormats {
 		[[nodiscard]] virtual std::vector<float> getNormals() const = 0;
 		[[nodiscard]] virtual std::vector<float> getTangents() const = 0;
 		[[nodiscard]] virtual std::vector<float> getUVs() const = 0;
-		[[nodiscard]] virtual std::vector<BoneWeight> getBoneWeights() const = 0;
+		[[nodiscard]] virtual std::vector<VertexWeight> getBoneWeights() const = 0;
 
 		//TODO: add move variants of all the setters
 		virtual void setVertexBuffer(const std::vector<float>&) = 0;
@@ -39,7 +39,7 @@ namespace GlacierFormats {
 		virtual void setNormals(const std::vector<float>&) = 0;
 		virtual void setTangents(const std::vector<float>&) = 0;
 		virtual void setUVs(const std::vector<float>&) = 0;
-		virtual void setBoneWeight(const std::vector<BoneWeight>&) = 0;
+		virtual void setBoneWeight(const std::vector<VertexWeight>&) = 0;
 		virtual void setName(const std::string& name) = 0;
 	};
 

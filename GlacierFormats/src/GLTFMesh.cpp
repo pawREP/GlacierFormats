@@ -42,7 +42,7 @@ std::vector<float> GLTFMesh::getUVs() const {
     return uvs;
 }
 
-std::vector<GlacierFormats::IMesh::BoneWeight> GLTFMesh::getBoneWeights() const {
+std::vector<GlacierFormats::IMesh::VertexWeight> GLTFMesh::getBoneWeights() const {
     return weights;
 }
 
@@ -66,7 +66,7 @@ void GLTFMesh::setUVs(const std::vector<float>& uvs_) {
     uvs = uvs_;
 }
 
-void GLTFMesh::setBoneWeight(const std::vector<BoneWeight>& weights_) {
+void GLTFMesh::setBoneWeight(const std::vector<VertexWeight>& weights_) {
     weights = weights_;
 }
 

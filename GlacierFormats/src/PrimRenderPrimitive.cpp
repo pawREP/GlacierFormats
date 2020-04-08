@@ -96,10 +96,10 @@ using namespace GlacierFormats;
 		return vertex_data->getUVs();
 	}
 
-	[[nodiscard]] std::vector<IMesh::BoneWeight> ZRenderPrimitive::getBoneWeights() const
+	[[nodiscard]] std::vector<IMesh::VertexWeight> ZRenderPrimitive::getBoneWeights() const
 	{
 		if (!isWeightedMesh())
-			return std::vector<IMesh::BoneWeight>();
+			return std::vector<IMesh::VertexWeight>();
 
 		return bone_weight_buffer->getCanonicalForm();
 	}
@@ -134,9 +134,9 @@ using namespace GlacierFormats;
 		vertex_data->setUVs(uvs);
 	}
 
-	void ZRenderPrimitive::setBoneWeight(const std::vector<BoneWeight>& weights) {
+	void ZRenderPrimitive::setBoneWeight(const std::vector<VertexWeight>& weights) {
 		if (!bone_weight_buffer)
-			bone_weight_buffer = std::make_unique<BoneWeightBuffer>();
+			bone_weight_buffer = std::make_unique<VertexWeightBuffer>();
 		bone_weight_buffer->setFromCanonicalForm(vertex_buffer->size(), weights);
 	}
 

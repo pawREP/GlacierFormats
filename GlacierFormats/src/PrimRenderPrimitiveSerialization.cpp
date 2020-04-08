@@ -20,7 +20,8 @@ using namespace GlacierFormats;
 
 		submesh.num_uv_channels = 1;//TODO: Note multiple UV channels can now be supported when using the GLTF exchange format.
 
-		//TODO: Some prims serialize the collision data here while some others put it at the end of the object after cloth data.
+		//TODO: Some prims serialize the collision data here while some others put it at the end of the object after cloth data. Both variants are valid for all
+		//mesh types, it would still be nice to serialize PRIMs that match the originals as closely as possible.
 		//Do some testing to figure out why. Casual observation so far is that standard, use the col at end variant while linked use the col at start option
 		//Not sure about weighted.
 		//Collision
@@ -61,7 +62,7 @@ using namespace GlacierFormats;
 			//Per Vertex Data
 			prim->vertex_data->serialize(bw);
 
-			if (!((int)submesh.properties & (int)SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1)) {
+			if (((int)submesh.properties & (int)SPrimObject::PROPERTY_FLAGS::PROPERTY_COLOR1)) {
 				
 				if (prim->vertex_colors)
 					prim->vertex_colors->serialize(bw);
@@ -222,8 +223,6 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 	prim->remnant.submesh_properties = prim_submesh.properties;
 	prim->remnant.submesh_color1 = prim_submesh.color1;
 
-	printf("mesh/sub c1: 0x%08X 0x%08X\n", prim_mesh->color1, prim_submesh.color1);
-
 	//Index buffer
 	br->seek(prim_submesh.index_buffer);
 	prim->index_buffer = std::make_unique<IndexBuffer>(br, &prim_submesh);
@@ -243,7 +242,7 @@ std::unique_ptr<ZRenderPrimitive> RenderPrimitiveDeserializer::deserializeMesh(B
 
 	//Vertex weights
 	if(prim_mesh->sub_type == SPrimObject::SUBTYPE::SUBTYPE_WEIGHTED)
-		prim->bone_weight_buffer = std::make_unique<BoneWeightBuffer>(br, &prim_submesh);
+		prim->bone_weight_buffer = std::make_unique<VertexWeightBuffer>(br, &prim_submesh);
 	
 	//Per vertex data (normals, uv, ...)
 	prim->vertex_data = std::make_unique<VertexDataBuffer>(br, prim_mesh.get(), &prim_submesh);

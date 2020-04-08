@@ -114,7 +114,7 @@ namespace GlacierFormats {
 			return nullptr;
 		std::unique_ptr<char[]> resource_data = nullptr;
 		auto size = getResource(id, resource_data);
-		return GlacierResource<T>::readFromBuffer(std::move(resource_data), size, id); //,< leak
+		return GlacierResource<T>::readFromBuffer(std::move(resource_data), size, id);
 	}
 
 }

@@ -4,103 +4,121 @@
 
 using namespace GlacierFormats;
 
-	BoneWeight::BoneWeight() {
-		weight = Vec<float, 4>(0, 0, 0, 0);
-		bone_id = Vec<unsigned char, 4>(0, 0, 0, 0);
-		c = 0;
+	VertexWeights::VertexWeights() {
+
 	}
 
-	BoneWeight::BoneWeight(BinaryReader* br) {
-		unsigned char we[4];
+	VertexWeights::VertexWeights(BinaryReader* br) {
+		unsigned char w_buf[base_weight_count];
+		unsigned char id_buf[base_weight_count];
 
-		br->read(we, 4);
-		br->read(bone_id.data(), 4);
-		c = br->read<float>();
+		//parse base weights
+		br->read(w_buf, base_weight_count);
+		br->read(id_buf, base_weight_count);
 
-		int sum = 0;
-		for (int i = 0; i < 4; ++i)
-			sum += we[i];
+		for (int i = 0; i < base_weight_count; ++i)
+			weights[i] = static_cast<float>(w_buf[i]) / 255.0f;
 
-		for (int i = 0; i < 4; ++i)
-			weight[i] = static_cast<float>(we[i]) / sum;
+		for (int i = 0; i < base_weight_count; ++i)
+			bone_ids[i] = id_buf[i];
+
+		//parse weight extension
+		br->read(w_buf, extended_weight_count);
+		br->read(id_buf, extended_weight_count);
+
+		for (int i = 0; i < extended_weight_count; ++i)
+			weights[base_weight_count + i] = static_cast<float>(w_buf[i]) / 255.0f;
+
+		for (int i = 0; i < extended_weight_count; ++i)
+			bone_ids[base_weight_count + i] = id_buf[i];
 	};
 
-	void BoneWeight::serialize(BinaryWriter* bw) const {
-		for (int i = 0; i < 4; ++i)
-			bw->write(static_cast<unsigned char>(weight[i] * 255.0f));
+	void VertexWeights::serialize(BinaryWriter* bw) const {
+		for (int i = 0; i < base_weight_count; ++i)
+			bw->write(static_cast<unsigned char>(std::roundf(weights[i] * 255.0f)));
 
-		for (int i = 0; i < 4; ++i)
-			bw->write(bone_id[i]);
+		for (int i = 0; i < base_weight_count; ++i)
+			bw->write(bone_ids[i]);
 
-		bw->write(c);
+		for (int i = 0; i < extended_weight_count; ++i)
+			bw->write(static_cast<unsigned char>(std::roundf(weights[base_weight_count + i] * 255.0f)));
+
+		for (int i = 0; i < extended_weight_count; ++i)
+			bw->write(bone_ids[base_weight_count + i]);
 	}
 
-	BoneWeightBuffer::BoneWeightBuffer() {
+	bool GlacierFormats::VertexWeights::operator==(const VertexWeights& other) const {
+		if (weights != other.weights)
+			return false;
+		if (bone_ids != other.bone_ids)
+			return false;
+
+		return true;
+	}
+
+	VertexWeightBuffer::VertexWeightBuffer() {
 
 	}
 
-	BoneWeightBuffer::BoneWeightBuffer(BinaryReader* br, const SPrimSubMesh* prim_submesh) {
+	VertexWeightBuffer::VertexWeightBuffer(BinaryReader* br, const SPrimSubMesh* prim_submesh) {
 		for (int vertex_id = 0; vertex_id < prim_submesh->num_vertex; ++vertex_id) {
 			weights.emplace_back(br);
 		}
 	}
 
-	void BoneWeightBuffer::serialize(BinaryWriter* bw) const {
+	void VertexWeightBuffer::serialize(BinaryWriter* bw) const {
 		for (const auto& w : weights)
 			w.serialize(bw);
 	}
 
-	size_t BoneWeightBuffer::size() const
+	std::vector<IMesh::VertexWeight> VertexWeightBuffer::getCanonicalForm() const
 	{
-		return weights.size();
-	}
-
-	auto BoneWeightBuffer::begin() const
-	{
-		return weights.begin();
-	}
-
-	auto BoneWeightBuffer::end() const
-	{
-		return weights.end();
-	}
-
-	std::vector<IMesh::BoneWeight> BoneWeightBuffer::getCanonicalForm() const
-	{
-		std::vector<IMesh::BoneWeight> ret;
+		std::vector<IMesh::VertexWeight> ret;
 		for (int i = 0; i < weights.size(); ++i) {
 			const auto& bone_weight = weights[i];
-			for (size_t j = 0; j < decltype(BoneWeight::weight)::size(); ++j) {
-				const auto weight = bone_weight.weight[j];
-				const auto bone_id = bone_weight.bone_id[j];
-				if (bone_weight.weight[j] != 0.0f)
-					ret.push_back({ i, bone_id, weight });
+			for (size_t j = 0; j < VertexWeights::size; ++j) {
+				const auto weights = bone_weight.weights[j];
+				const auto bone_id = bone_weight.bone_ids[j];
+				if (bone_weight.weights[j] != 0.0f)
+					ret.push_back({ i, bone_id, weights });
 			}
 		}
 		return ret;
 	}
 
-	void BoneWeightBuffer::setFromCanonicalForm(int vertex_count, const std::vector<IMesh::BoneWeight>& weight_buffer) {
+	void VertexWeightBuffer::setFromCanonicalForm(int vertex_count, const std::vector<IMesh::VertexWeight>& weight_buffer) {
 		weights.resize(vertex_count);
 		for (auto& new_weight : weight_buffer) {
-			auto& weight = weights[new_weight.vertex_id];
+			auto& vertex_weights = weights[new_weight.vertex_id];
 			auto slot_id = 0;
-			while ((weight.weight[slot_id] != 0.f) && (slot_id != 4))
+			while ((vertex_weights.weights[slot_id] != 0.f) && (slot_id != VertexWeights::size))
 				++slot_id;
 
-			if (slot_id == 4)
+			if (slot_id == VertexWeights::size)
 				throw std::runtime_error("Glacier render meshes only support 4 bone weights per vertex");
 
-			weight.weight[slot_id] = new_weight.weight;
-			weight.bone_id[slot_id] = new_weight.bone_id;
+			vertex_weights.weights[slot_id] = new_weight.weights;
+			vertex_weights.bone_ids[slot_id] = new_weight.bone_id;
 		}
 
 	}
 
-	BoneWeight& BoneWeightBuffer::operator[](uint32_t idx) {
+	VertexWeights& VertexWeightBuffer::operator[](uint32_t idx) {
 		return weights[idx];
 	}
 
-	const BoneWeight& BoneWeightBuffer::operator[](uint32_t idx) const {
+	const VertexWeights& VertexWeightBuffer::operator[](uint32_t idx) const {
 		return weights[idx];
+	}
+
+	bool VertexWeightBuffer::operator==(const VertexWeightBuffer& other) const {
+		if (weights.size() != other.weights.size())
+			return false;
+
+		for (int i = 0; i < weights.size(); ++i) {
+			if (!((*this)[i] == other[i]))
+				return false;
+		}
+
+		return true;
 	}

@@ -42,7 +42,7 @@ namespace GlacierFormats {
 		std::unique_ptr<VertexBuffer> vertex_buffer;
 		std::unique_ptr<IndexBuffer> index_buffer;
 		std::unique_ptr<VertexDataBuffer> vertex_data;
-		std::unique_ptr<BoneWeightBuffer> bone_weight_buffer;
+		std::unique_ptr<VertexWeightBuffer> bone_weight_buffer;
 		std::unique_ptr<VertexColors> vertex_colors;
 		std::unique_ptr<CollisionData> collision_data;
 		std::unique_ptr<ClothData> cloth_data;
@@ -66,14 +66,14 @@ namespace GlacierFormats {
 		[[nodiscard]] std::vector<float> getNormals() const override final;
 		[[nodiscard]] std::vector<float> getTangents() const override final;
 		[[nodiscard]] std::vector<float> getUVs() const override final;
-		[[nodiscard]] std::vector<IMesh::BoneWeight> getBoneWeights() const override final;
+		[[nodiscard]] std::vector<IMesh::VertexWeight> getBoneWeights() const override final;
 
 		void setVertexBuffer(const std::vector<float>&) override final;
 		void setIndexBuffer(const std::vector<unsigned short>&) override final;
 		void setNormals(const std::vector<float>&) override final;
 		void setTangents(const std::vector<float>&) override final;
 		void setUVs(const std::vector<float>&) override final;
-		void setBoneWeight(const std::vector<BoneWeight>&) override final;
+		void setBoneWeight(const std::vector<VertexWeight>&) override final;
 		void setName(const std::string& name) override final;
 	};
 

@@ -217,12 +217,12 @@ GLTFAsset::GLTFAsset(const std::filesystem::path& path, const std::unordered_map
                 const auto influnces = 4;
                 assert((joints_data.size() / influnces) == vertex_count);
 
-                std::vector<IMesh::BoneWeight> bone_weights;
+                std::vector<IMesh::VertexWeight> bone_weights;
                 bone_weights.reserve(vertex_count * influnces);
                 for (int i = 0; i < joints_data.size(); ++i) {
                     auto vertex_id = i / influnces;
-                    IMesh::BoneWeight weight{ vertex_id, bone_remapping[joints_data[i]], weights_data[i] };
-                    bone_weights.push_back(weight);
+                    IMesh::VertexWeight weights{ vertex_id, bone_remapping[joints_data[i]], weights_data[i] };
+                    bone_weights.push_back(weights);
                 }
                 //TODO: Normalization required? Read spec.
                 gltf_mesh->setBoneWeight(bone_weights);

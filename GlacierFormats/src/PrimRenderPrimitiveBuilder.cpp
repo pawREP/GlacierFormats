@@ -69,7 +69,7 @@ using namespace GlacierFormats;
 		prim->collision_data = std::move(collision);
 	}
 
-	void ZRenderPrimitiveBuilder::setBoneWeightBuffer(std::unique_ptr<BoneWeightBuffer> boneweight_buffer) {
+	void ZRenderPrimitiveBuilder::setBoneWeightBuffer(std::unique_ptr<VertexWeightBuffer> boneweight_buffer) {
 		prim->bone_weight_buffer = std::move(boneweight_buffer);
 	}
 
