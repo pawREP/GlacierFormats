@@ -2,6 +2,7 @@
 #include <cinttypes>
 #include <cstring>
 #include <type_traits>
+#include <numeric>
 
 namespace GlacierFormats {
 
@@ -142,14 +143,21 @@ namespace GlacierFormats {
 		}
 
 		[[nodiscard]] bool operator==(const Vec& o) const noexcept {
-			for (int i = 0; i < Dim; ++i)
-				if (data_[i] != o[i])
-					return false;
+			if constexpr (std::is_floating_point_v<value_type>) {
+				for (int i = 0; i < Dim; ++i)
+					if(std::abs(data_[i] - o[i]) > (std::numeric_limits<value_type>::epsilon() * 10))
+						return false;
+			}
+			else {
+				for (int i = 0; i < Dim; ++i)
+					if (data_[i] != o[i])
+						return false;
+			}
 			return true;
 		}
 
 		[[nodiscard]] bool operator!=(const Vec& o) const noexcept {
-			return (*this == o);
+			return !(*this == o);
 		}
 
 		template<typename ScaleT>
