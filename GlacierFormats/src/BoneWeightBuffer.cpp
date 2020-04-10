@@ -4,7 +4,7 @@
 
 using namespace GlacierFormats;
 
-	VertexWeights::VertexWeights() {
+VertexWeights::VertexWeights()  {
 
 	}
 
@@ -71,15 +71,14 @@ using namespace GlacierFormats;
 			w.serialize(bw);
 	}
 
-	std::vector<IMesh::VertexWeight> VertexWeightBuffer::getCanonicalForm() const
-	{
+	std::vector<IMesh::VertexWeight> VertexWeightBuffer::getCanonicalForm() const {
 		std::vector<IMesh::VertexWeight> ret;
 		for (int i = 0; i < weights.size(); ++i) {
-			const auto& bone_weight = weights[i];
+			const auto& vertex_weights = weights[i];
 			for (size_t j = 0; j < VertexWeights::size; ++j) {
-				const auto weights = bone_weight.weights[j];
-				const auto bone_id = bone_weight.bone_ids[j];
-				if (bone_weight.weights[j] != 0.0f)
+				const auto weights = vertex_weights.weights[j];
+				const auto bone_id = vertex_weights.bone_ids[j];
+				if (vertex_weights.weights[j] != 0.0f)
 					ret.push_back({ i, bone_id, weights });
 			}
 		}
@@ -87,15 +86,12 @@ using namespace GlacierFormats;
 	}
 
 	void VertexWeightBuffer::setFromCanonicalForm(int vertex_count, const std::vector<IMesh::VertexWeight>& weight_buffer) {
-		weights.resize(vertex_count);
-		for (auto& new_weight : weight_buffer) {
+		weights.resize(vertex_count, VertexWeights());
+		for (const auto& new_weight : weight_buffer) {
 			auto& vertex_weights = weights[new_weight.vertex_id];
 			auto slot_id = 0;
 			while ((vertex_weights.weights[slot_id] != 0.f) && (slot_id != VertexWeights::size))
 				++slot_id;
-
-			if (slot_id == VertexWeights::size)
-				throw std::runtime_error("Glacier render meshes only support 4 bone weights per vertex");
 
 			vertex_weights.weights[slot_id] = new_weight.weights;
 			vertex_weights.bone_ids[slot_id] = new_weight.bone_id;

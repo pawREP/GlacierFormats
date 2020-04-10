@@ -207,22 +207,39 @@ GLTFAsset::GLTFAsset(const std::filesystem::path& path, const std::unordered_map
                 accessor_id = primitive.GetAttributeAccessorId(ACCESSOR_WEIGHTS_0);
                 const Accessor& weights_accessor = document.accessors.Get(accessor_id);
 
-                const auto joints_data = resourceReader->ReadBinaryData<unsigned short>(document, joints_accessor);
-                const auto weights_data = resourceReader->ReadBinaryData<float>(document, weights_accessor);
+                auto joints_data = resourceReader->ReadBinaryData<unsigned short>(document, joints_accessor);
+                auto weights_data = resourceReader->ReadBinaryData<float>(document, weights_accessor);
+
+                //Extended weights
+                if (primitive.HasAttribute("JOINTS_1") && primitive.HasAttribute("WEIGHTS_1")) {
+                    accessor_id = primitive.GetAttributeAccessorId("JOINTS_1");
+                    const Accessor& joints_1_accessor = document.accessors.Get(accessor_id);
+
+                    accessor_id = primitive.GetAttributeAccessorId("WEIGHTS_1");
+                    const Accessor& weights_1_accessor = document.accessors.Get(accessor_id);
+
+                    const auto joints_1_data = resourceReader->ReadBinaryData<unsigned short>(document, joints_1_accessor);
+                    const auto weights_1_data = resourceReader->ReadBinaryData<float>(document, weights_1_accessor);
+
+                    joints_data.insert(joints_data.end(), joints_1_data.begin(), joints_1_data.end());
+                    weights_data.insert(weights_data.end(), weights_1_data.begin(), weights_1_data.end());
+                }
 
                 //structure of the joints_data and weights_data is:
                 //Joints: 4 bone_ids per vertex. unused bone_ids are indicated with weights of zero
                 //Weights; 4 weights that correspond to the bone_ids in joints. 0.0f if empty.
                 const auto vertex_count = gltf_mesh->vertexCount();
                 const auto influnces = 4;
-                assert((joints_data.size() / influnces) == vertex_count);
+                const auto attribute_block_size = vertex_count * influnces;
 
                 std::vector<IMesh::VertexWeight> bone_weights;
-                bone_weights.reserve(vertex_count * influnces);
+                bone_weights.reserve(attribute_block_size);
                 for (int i = 0; i < joints_data.size(); ++i) {
-                    auto vertex_id = i / influnces;
-                    IMesh::VertexWeight weights{ vertex_id, bone_remapping[joints_data[i]], weights_data[i] };
-                    bone_weights.push_back(weights);
+                    if (weights_data[i]) {
+                        auto vertex_id = (i % attribute_block_size) / influnces;
+                        IMesh::VertexWeight weights{ vertex_id, bone_remapping[joints_data[i]], weights_data[i] };
+                        bone_weights.push_back(weights);
+                    }
                 }
                 //TODO: Normalization required? Read spec.
                 gltf_mesh->setBoneWeight(bone_weights);

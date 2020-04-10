@@ -177,8 +177,10 @@ struct SkinnedMeshPrimitiveContext {
     std::string tangent_acc;
     std::string uv_coord_acc;
     std::vector<std::string>* joint_nodes;
-    std::string joints_acc;
-    std::string weights_acc;
+    std::string joints_0_acc;
+    std::string joints_1_acc;
+    std::string weights_0_acc;
+    std::string weights_1_acc;
     std::string inv_bind_mat_id;
     std::string skinId;
     bool is_weighted_mesh;
@@ -227,30 +229,40 @@ void CreateMeshPrimitveResources(BufferBuilder& buffer_builder, const GlacierFor
     ctx.uv_coord_acc = buffer_builder.AddAccessor(uv_coordinates, acc_desc).id;
 
     //TODO: Double check if bone weights are exported in normalized form from IMesh interface
-    //Weights in PRIM are not necessarily normalized.
     if (!ctx.is_weighted_mesh)
         return;
 
     const auto& bone_weights = mesh->getBoneWeights();
     constexpr int influence_count = 4;//Count of bones that can influence a single vertex per ACCESSOR_JOINTS_X / ACCESSOR_WEIGHTS_X.
 
-    std::vector<short> joints(mesh->vertexCount() * influence_count, 0);//I wish I could do std::vector<std::array<short, influence_count>> :(
-    std::vector<float> weights(mesh->vertexCount() * influence_count, 0);
-    for (int vert_id = 0; vert_id < mesh->vertexCount(); ++vert_id) {
-        int slot_idx = 0;
-        for (const auto& w : bone_weights) {
-            if (w.vertex_id == vert_id) {
-                assert(slot_idx < influence_count);
-                joints[vert_id * influence_count + slot_idx] = static_cast<short>(w.bone_id);//TODO: IMesh interface should be changed to emmit short since PRIM only supports short anyway.
-                weights[vert_id * influence_count + slot_idx] = w.weights;
-                slot_idx++;
-            }
+    std::vector<short> joints0(mesh->vertexCount() * influence_count, 0);
+    std::vector<short> joints1(mesh->vertexCount() * influence_count, 0);
+    std::vector<float> weights0(mesh->vertexCount() * influence_count, 0);
+    std::vector<float> weights1(mesh->vertexCount() * influence_count, 0);
+
+    std::vector<int> slots(bone_weights.size(), 0);
+    for (const auto& w : bone_weights) {
+        const auto& vert_id = w.vertex_id;
+        auto& slot_idx = slots[vert_id];
+        if (slot_idx < influence_count) {
+            joints0[vert_id * influence_count + slot_idx % 4] = static_cast<short>(w.bone_id);
+            weights0[vert_id * influence_count + slot_idx % 4] = w.weights;
         }
+        else {
+            joints1[vert_id * influence_count + slot_idx % 4] = static_cast<short>(w.bone_id);
+            weights1[vert_id * influence_count + slot_idx % 4] = w.weights;
+        }
+        slot_idx++;
     }
+
     buffer_builder.AddBufferView();
-    ctx.joints_acc = buffer_builder.AddAccessor(joints, { TYPE_VEC4, COMPONENT_UNSIGNED_SHORT }).id;
+    ctx.joints_0_acc = buffer_builder.AddAccessor(joints0, { TYPE_VEC4, COMPONENT_UNSIGNED_SHORT }).id;
     buffer_builder.AddBufferView();
-    ctx.weights_acc = buffer_builder.AddAccessor(weights, { TYPE_VEC4, COMPONENT_FLOAT }).id;
+    ctx.joints_1_acc = buffer_builder.AddAccessor(joints1, { TYPE_VEC4, COMPONENT_UNSIGNED_SHORT }).id;
+    buffer_builder.AddBufferView();
+    ctx.weights_0_acc = buffer_builder.AddAccessor(weights0, { TYPE_VEC4, COMPONENT_FLOAT }).id;
+    buffer_builder.AddBufferView();
+    ctx.weights_1_acc = buffer_builder.AddAccessor(weights1, { TYPE_VEC4, COMPONENT_FLOAT }).id;
 }
 
 void CreateJoints(const GlacierFormats::IRig* rig, Document& document, std::vector<std::string>& joints) {
@@ -376,7 +388,7 @@ constexpr bool USE_SPEC_GLOSS_EXT = false;
 
 //TODO: The material system isn't understood well enough to make this very useful just yet. Avoid.
 std::string CreateMaterial(Document& document, const GlacierFormats::IMaterial* src_material) {
-    //TODO: Externalize this fixed extention and think about the texture situation. 
+    //TODO: Externalize this fixed extension and think about the texture situation. 
     //GLTF doesn't officially support tga and most viewers ignore the textures. Blender thankfully doesn't. 
     //DDS can be supported via a vendor extension but this extention might 
     //not be supported in blender and other editors. Further research required... 
@@ -408,8 +420,10 @@ std::string CreateMesh(Document& document, const GlacierFormats::IMaterial* src_
     mesh_primitive.attributes[ACCESSOR_TANGENT] = ctx.tangent_acc;
     mesh_primitive.attributes[ACCESSOR_TEXCOORD_0] = ctx.uv_coord_acc;
     if (ctx.is_weighted_mesh) {
-        mesh_primitive.attributes[ACCESSOR_JOINTS_0] = ctx.joints_acc;
-        mesh_primitive.attributes[ACCESSOR_WEIGHTS_0] = ctx.weights_acc;
+        mesh_primitive.attributes["JOINTS_0"] = ctx.joints_0_acc;
+        mesh_primitive.attributes["JOINTS_1"] = ctx.joints_1_acc;
+        mesh_primitive.attributes["WEIGHTS_0"] = ctx.weights_0_acc;
+        mesh_primitive.attributes["WEIGHTS_1"] = ctx.weights_1_acc;
     }
     //if (src_material)
     //    mesh_primitive.materialId = material_id;
