@@ -43,7 +43,7 @@ namespace GlacierFormats {
 		}
 
 		Vec() noexcept {
-			memset(data_, 0, size());
+			memset(data_, 0, size() * sizeof(T));
 		}
 
 		Vec(const Vec& o) = default;
