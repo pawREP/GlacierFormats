@@ -174,6 +174,20 @@ namespace GlacierFormats {
 			return Vec<T, 3>(x(), y(), z());
 		}
 
+		void normalize() noexcept {
+			static_assert(std::is_floating_point_v<T>);
+
+			auto sum = T(0);
+			for (auto& v : *this)
+				sum += v * v;
+
+			auto norm = sqrt(sum);
+
+			if (norm != 0)
+				for (auto& v : *this)
+					v /= norm;
+		}
+
 	};
 
 	template<typename T, unsigned int Dim>
