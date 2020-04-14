@@ -82,7 +82,8 @@ namespace GlacierFormats {
 
 	};
 
-	//TODO: Move and make non template
-	template<typename Dst, typename Src>
-	std::unique_ptr<Dst> generateTextFromTexd(const std::unique_ptr<Src>& texd);
+	class TEXD;
+	class TEXT;
+
+	bool generateTextFromTexd(const TEXD* texd, TEXT** text);
 }

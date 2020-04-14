@@ -663,13 +663,12 @@ DirectX::ScratchImage buildMips(const DirectX::ScratchImage& img) {
 
 
 //Generates a low res TEXT texture resource from a TEXD texture resource
-template<typename Dst, typename Src>
-std::unique_ptr<Dst> GlacierFormats::generateTextFromTexd(const std::unique_ptr<Src>& texd) {
+bool GlacierFormats::generateTextFromTexd(const TEXD* texd, TEXT** text) {
 	if (texd->texture_atlas_data.size())
 		throw std::runtime_error("TEXT generation is not supported for TEXDs with texture atlas information");
 
-	auto text = std::make_unique<TEXT>();
-	text->header = texd->header;
+	*text = new TEXT();
+	(*text)->header = texd->header;
 
 	auto scale = textScaleFactor(texd->header.width, texd->header.height);
 	auto text_w = texd->header.width / scale;
@@ -689,10 +688,6 @@ std::unique_ptr<Dst> GlacierFormats::generateTextFromTexd(const std::unique_ptr<
 	if (DirectX::IsCompressed(source_format))
 		texd_image = compress(texd_image, source_format);
 
-	text->pixels.resize(texd_image.GetPixelsSize());
-	std::copy(texd_image.GetPixels(), texd_image.GetPixels() + texd_image.GetPixelsSize(), text->pixels.data());
-
-	return text;
+	(*text)->pixels.resize(texd_image.GetPixelsSize());
+	std::copy(texd_image.GetPixels(), texd_image.GetPixels() + texd_image.GetPixelsSize(), (*text)->pixels.data());
 }
-
-template std::unique_ptr<TEXT> GlacierFormats::generateTextFromTexd(const std::unique_ptr<TEXD>& texd);
