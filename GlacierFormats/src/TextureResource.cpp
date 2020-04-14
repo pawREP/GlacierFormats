@@ -300,9 +300,9 @@ bool TextureResource<T>::saveToDDSFile(const std::filesystem::path& path) const 
 [[nodiscard]] DirectX::ScratchImage compress(const DirectX::ScratchImage& in, DXGI_FORMAT format) {
 	DirectX::ScratchImage out;
 	HRESULT hr = DirectX::Compress(EncodingDevice(), in.GetImages(), in.GetImageCount(), in.GetMetadata(), format, DirectX::TEX_COMPRESS_PARALLEL, DirectX::TEX_THRESHOLD_DEFAULT, out);
-	if (!FAILED(hr))
+	if (FAILED(hr))
 		hr = DirectX::Compress(in.GetImages(), in.GetImageCount(), in.GetMetadata(), format, DirectX::TEX_COMPRESS_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, out);
-	if (!FAILED(hr))
+	if (FAILED(hr))
 		throw std::runtime_error("DDS compression failed");
 	return out;
 }
