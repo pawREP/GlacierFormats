@@ -1,19 +1,24 @@
 #pragma once
-#include "GlacierTypes.h"
-#include "GlacierResource.h"
+#include "TextureResource.h"
 
 //TODO: Deal with this macro collision;
 #undef TEXT
-	
-//TODO: Impl. 
+
 namespace GlacierFormats {
 
-	//Currently only a dummy class. impl is almost identical to TEXD, read 010 template for details.
-	class TEXT : public GlacierResource<TEXT> {
+	class BinaryReader;
+	class BinaryWriter;
+
+	//Low res textures used as placeholders while full scale TEXD textures are loaded.
+	class TEXT : public TextureResource<TEXT> {
 	public:
+		TEXT();
+		TEXT(const TEXT&);
 		TEXT(BinaryReader& br, RuntimeId id);
 
 		void serialize(BinaryWriter& bw);
+
+		std::string name() const;
 	};
 
 }
