@@ -85,5 +85,5 @@ namespace GlacierFormats {
 	class TEXD;
 	class TEXT;
 
-	bool generateTextFromTexd(const TEXD* texd, TEXT** text);
+	void initializeTextFromTexd(const TEXD& texd, TEXT& text);
 }

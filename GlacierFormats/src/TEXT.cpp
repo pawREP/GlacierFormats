@@ -1,4 +1,5 @@
 #include "TEXT.h"
+#include "TEXD.h"
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 
@@ -10,6 +11,10 @@ TEXT::TEXT() : TextureResource<TEXT>() {
 
 TEXT::TEXT(const TEXT& other) : TextureResource<TEXT>(other) {
 
+}
+
+TEXT::TEXT(const TEXD& other) : TextureResource<TEXT>() {
+	initializeTextFromTexd(other, *this);
 }
 
 TEXT::TEXT(BinaryReader& br, RuntimeId id) : TextureResource<TEXT>(br, id) {

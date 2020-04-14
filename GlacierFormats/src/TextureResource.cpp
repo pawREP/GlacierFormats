@@ -663,20 +663,19 @@ DirectX::ScratchImage buildMips(const DirectX::ScratchImage& img) {
 
 
 //Generates a low res TEXT texture resource from a TEXD texture resource
-bool GlacierFormats::generateTextFromTexd(const TEXD* texd, TEXT** text) {
-	if (texd->texture_atlas_data.size())
+void GlacierFormats::initializeTextFromTexd(const TEXD& texd, TEXT& text) {
+	if (texd.texture_atlas_data.size())
 		throw std::runtime_error("TEXT generation is not supported for TEXDs with texture atlas information");
 
-	*text = new TEXT();
-	(*text)->header = texd->header;
+	text.header = texd.header;
 
-	auto scale = textScaleFactor(texd->header.width, texd->header.height);
-	auto text_w = texd->header.width / scale;
-	auto text_h = texd->header.height / scale;
+	auto scale = textScaleFactor(texd.header.width, texd.header.height);
+	auto text_w = texd.header.width / scale;
+	auto text_h = texd.header.height / scale;
 	
 	DirectX::ScratchImage texd_image;
 	DirectX::TexMetadata meta;
-	HRESULT hr = texd->getScratchImage(&meta, texd_image);
+	HRESULT hr = texd.getScratchImage(&meta, texd_image);
 	if (FAILED(hr))
 		std::runtime_error("Failed to convert TEXD to scratch image");
 
@@ -688,6 +687,7 @@ bool GlacierFormats::generateTextFromTexd(const TEXD* texd, TEXT** text) {
 	if (DirectX::IsCompressed(source_format))
 		texd_image = compress(texd_image, source_format);
 
-	(*text)->pixels.resize(texd_image.GetPixelsSize());
-	std::copy(texd_image.GetPixels(), texd_image.GetPixels() + texd_image.GetPixelsSize(), (*text)->pixels.data());
+	text.pixels.resize(texd_image.GetPixelsSize());
+	std::copy(texd_image.GetPixels(), texd_image.GetPixels() + texd_image.GetPixelsSize(), text.pixels.data());
 }
+
