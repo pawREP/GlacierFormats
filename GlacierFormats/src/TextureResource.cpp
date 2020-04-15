@@ -492,8 +492,8 @@ std::unique_ptr<T> TextureResource<T>::loadFromTGAFile(const std::filesystem::pa
 	auto texd = std::make_unique<T>();
 
 	auto stem = std::filesystem::path(path).stem().generic_string();
-	RuntimeId id = stem;
-	//try {id = std::stoull(stem, nullptr, 16);} catch (std::exception e) { return nullptr; }
+	id = stem;
+
 	if (!initilizeTEXHeaderById(id, texd->header))
 		return nullptr;
 
