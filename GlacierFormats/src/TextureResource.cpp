@@ -130,9 +130,14 @@ TextureResource<T>::TextureResource(BinaryReader& br, RuntimeId id) : GlacierRes
 	br.read(pixels.data(), pixels.size());
 
 	if constexpr (std::is_same_v<T, TEXT>) {
-		//regularizeHeader(header);
-		auto is_size = getTotalPixelsSize(header.width, header.height, header.mips_cnt, toDxgiFormat(header.format));
-		auto soll_size = pixels.size();
+		//TET header data corresponds to the pixel data found in the TEXD dependency, not the TEXT file itself.
+		auto scale = textScaleFactor(header.width, header.height);
+		auto text_w = header.width / scale;
+		auto text_h = header.height / scale;
+		auto text_mips_levels = maxMipsCount(text_w, text_h);
+
+		auto soll_size = getTotalPixelsSize(text_w, text_h, text_mips_levels, toDxgiFormat(header.format));
+		auto is_size = pixels.size();
 		if (is_size != soll_size)
 			throw std::runtime_error("Pixel size mismatch");
 	}
