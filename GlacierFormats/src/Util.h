@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <filesystem>
 
 namespace GlacierFormats {
 
@@ -30,6 +31,8 @@ namespace GlacierFormats {
 		bool isRuntimeIdString(const std::string& str);
 
 		void mergePatchFiles(std::vector<std::string> in_patch_file_paths, std::string out_patch_file_path);
+
+		RuntimeId runtimeIdFromFilePath(const std::filesystem::path& path);
 	}
 
 }

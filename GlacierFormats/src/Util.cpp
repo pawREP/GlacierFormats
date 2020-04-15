@@ -78,3 +78,10 @@ void GlacierFormats::Util::mergePatchFiles(std::vector<std::string> in_patch_fil
 
 	out_patch.write(out_patch_file_path);
 }
+
+RuntimeId GlacierFormats::Util::runtimeIdFromFilePath(const std::filesystem::path& path) {
+	if (path.empty() || std::filesystem::is_regular_file(path))
+		return RuntimeId();
+
+	return RuntimeId(path.stem().generic_string());
+}
