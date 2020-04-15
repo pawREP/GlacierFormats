@@ -103,7 +103,6 @@ namespace GlacierFormats {
 		std::vector<ResourceReference> getResourceReferences(const RuntimeId& id, const std::string& type) const;
 
 		//Calculating back references is expensive, consider builing a new data structure if many backreferences are needed.
-		std::vector<RuntimeId> getResourceBackReferences(const RuntimeId& id) const;
 		std::vector<RuntimeId> getResourceBackReferences(const RuntimeId& id, const std::string& type) const;
 
 		std::vector<RuntimeId> getIds() const;
