@@ -11,6 +11,7 @@
 #include "../src/TEXD.h"
 #include "../src/Util.h"
 #include "../src/PrimSerializationTypes.h"
+#include "../src/Texture.h"
 
 #include "../src/GLTFAsset.h"
 #include "../src/Export/GLTFExporter.h"
