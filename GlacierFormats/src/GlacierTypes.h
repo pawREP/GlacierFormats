@@ -16,6 +16,8 @@ namespace GlacierFormats {
 		//TODO: Add static isRuntimeIdString(const std::string& to avoid throwing in constructor if invalid string is passed.)
 		RuntimeId() : id(0xFFFFFFFFFFFFFFFF) {};
 		RuntimeId(uint64_t id) : id(id) {}
+		RuntimeId(int64_t id) : id(id) {}
+		RuntimeId(int32_t id) : id(id) {}
 		RuntimeId(const std::string& id_string) : id(0) {
 			if (id_string == "")
 				return;
