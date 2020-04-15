@@ -152,6 +152,30 @@ std::filesystem::path ResourceRepository::runtime_dir = std::filesystem::path();
 		return references_of_type;
 	}
 
+	std::vector<RuntimeId> GlacierFormats::ResourceRepository::getResourceBackReferences(const RuntimeId& id) const {
+		throw std::runtime_error("To be reviewed");
+		std::vector<RuntimeId> back_references;
+		for (const auto& h : header) {
+			auto refs = h.second->getReferences();
+			for (const auto& ref : refs)
+				if (ref.id == id)
+					back_references.push_back(h.first);
+		}
+		return back_references;
+	}
+
+	std::vector<RuntimeId> GlacierFormats::ResourceRepository::getResourceBackReferences(const RuntimeId& id, const std::string& type) const {
+		throw std::runtime_error("To be reviewed");
+		//TODO: Merge overloads and optimize a bit;
+		auto references = getResourceBackReferences(id);
+		std::vector<RuntimeId> filtered_references;
+		for (const auto& id : references) {
+			if (getResourceType(id) == type)
+				filtered_references.push_back(id);
+		}
+		return filtered_references;
+	}
+
 	std::vector<RuntimeId> GlacierFormats::ResourceRepository::getIds() const {
 		//TODO: This function is needlessly expensive, store id list in ResouceRepositoryData
 		std::vector<RuntimeId> ids;
@@ -218,4 +242,9 @@ std::filesystem::path ResourceRepository::runtime_dir = std::filesystem::path();
 		}
 
 		return uncompr_size;
+	}
+
+	std::vector<char> GlacierFormats::ResourceRepository::getResource(const RuntimeId& id) const {
+		throw;
+		return std::vector<char>();
 	}

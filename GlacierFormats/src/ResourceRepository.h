@@ -96,10 +96,15 @@ namespace GlacierFormats {
 		template<typename T>
 		std::unique_ptr<T> getResource(RuntimeId id) const;
 		uint64_t getResource(const RuntimeId& id, std::unique_ptr<char[]>& resource) const;
+		std::vector<char> getResource(const RuntimeId& id) const;
 
 		std::string getResourceType(const RuntimeId& id) const;
 		std::vector<ResourceReference> getResourceReferences(const RuntimeId& id) const;
 		std::vector<ResourceReference> getResourceReferences(const RuntimeId& id, const std::string& type) const;
+
+		//Calculating back references is expensive, consider builing a new data structure if many backreferences are needed.
+		std::vector<RuntimeId> getResourceBackReferences(const RuntimeId& id) const;
+		std::vector<RuntimeId> getResourceBackReferences(const RuntimeId& id, const std::string& type) const;
 
 		std::vector<RuntimeId> getIds() const;
 		std::vector<RuntimeId> getIdsByType(std::string type) const;
