@@ -492,9 +492,9 @@ std::unique_ptr<T> TextureResource<T>::loadFromTGAFile(const std::filesystem::pa
 	auto texd = std::make_unique<T>();
 
 	auto stem = std::filesystem::path(path).stem().generic_string();
-	id = stem;
+	texd->id = stem;
 
-	if (!initilizeTEXHeaderById(id, texd->header))
+	if (!initilizeTEXHeaderById(texd->id, texd->header))
 		return nullptr;
 
 	//TODO:regularize Header
