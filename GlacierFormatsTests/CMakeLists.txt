@@ -1,5 +1,6 @@
 add_executable(GlacierFormatsTests
     test.cpp
+    Texture.h
     )
 	
 set_property(TARGET GlacierFormatsTests PROPERTY CXX_STANDARD 17)

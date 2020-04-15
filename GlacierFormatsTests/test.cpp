@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <filesystem>
 #include "GlacierFormats.h"
+#include "Texture.h"
 
 using namespace GlacierFormats;
 
