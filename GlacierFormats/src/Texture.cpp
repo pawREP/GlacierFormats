@@ -24,6 +24,10 @@ RuntimeId getTEXTBackReference(RuntimeId texd_id) {
 	return 0;
 }
 
+Texture::Texture() {
+
+}
+
 //Construct Texture based on TEXT or TEXD runtime id.
 Texture::Texture(RuntimeId texture_resource_id) {
 	const auto repo = ResourceRepository::instance();
@@ -54,13 +58,9 @@ Texture::Texture(RuntimeId texture_resource_id) {
 }
 
 std::unique_ptr<Texture> Texture::loadFromTGAFile(const std::filesystem::path& path) {
-	const auto repo = ResourceRepository::instance();
+	auto texture = std::make_unique<Texture>();
 
-	RuntimeId texd_id = Util::runtimeIdFromFilePath(path);
-	if (repo->getResourceType(texd_id) != "TEXD")
-		return nullptr;
-
-	auto texture = std::make_unique<Texture>(texd_id);
+	texture->texd = TEXD::loadFromTGAFile(path);
 	texture->text = std::make_unique<TEXT>(*texture->texd);
 
 	return texture;

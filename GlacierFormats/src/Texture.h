@@ -12,6 +12,7 @@ namespace GlacierFormats {
 		std::unique_ptr<TEXT> text;
 		std::unique_ptr<TEXD> texd;
 
+		Texture();
 		Texture(RuntimeId text_id);
 
 		static std::unique_ptr<Texture> loadFromTGAFile(const std::filesystem::path& path);
