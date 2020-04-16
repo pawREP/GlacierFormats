@@ -13,12 +13,12 @@ Currently supported formats:
 - **TEXD** (Detail Textures)
     - Full support for de/serialization as well as import and export from and to a variety of texture exchange formats like TGA, PNG and DDS.
 - **TEXT** (Placeholder Textures)
-    - The format is almost identical to TEXD but it's only trivially  supported because of it's limited usefulness.
+    - Full support for de/serialization as well as import and export from and to a variety of texture exchange formats like TGA, PNG and DDS.
 - **MATE** (Material Entity)
     - Only trivially supported. 
 - **MATI** (Material Instance)
     - Full support for de/serialization. 
-- **RPKG** (Retail Package)
+- **RPKG** (Runtime Package)
     - Full support for de/serialization, modification and creation of both the `BASE` and `PATCH` subtypes. 
 
 In addition to the very openly designed, research oriented resource file classes, the library provides a number of higher level interfaces that sit on top of resource classes and provide more restricted, generic interfaces for the underlying abstract types. `IMesh`, a generic face-vertex mesh interface that's implemented by `PRIM`, is an example of such an interface. 
