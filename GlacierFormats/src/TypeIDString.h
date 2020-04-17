@@ -39,7 +39,7 @@ struct std::hash<TypeIDString> {
 		//TODO: replace with bit cast;
 		int i;
 		std::memcpy(&i, &str, sizeof(i));
-		return i;
+		return std::hash<int>{}(i);
 	}
 };
 
