@@ -19,7 +19,7 @@ namespace GlacierFormats {
 		template<typename T>
 		inline size_t fnv1a(const std::vector<T>& vec) {
 			static_assert(std::is_trivially_copyable<T>::value);
-			const char* bytes = reinterpret_cast<const char*>(vec.data());//UB abuse
+			const char* bytes = reinterpret_cast<const char*>(vec.data());
 			size_t byte_count = vec.size() * sizeof(T);
 
 			size_t hash = 0xcbf29ce484222325;
