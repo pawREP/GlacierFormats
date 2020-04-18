@@ -234,6 +234,11 @@ std::filesystem::path ResourceRepository::runtime_dir = std::filesystem::path();
 	}
 
 	std::vector<char> GlacierFormats::ResourceRepository::getResource(const RuntimeId& id) const {
-		throw;
-		return std::vector<char>();
+		//TODO: Optimize
+		std::unique_ptr<char[]> data;
+		auto data_size = getResource(id, data);
+
+		std::vector<char> ret(data_size);
+		std::copy(data.get(), data.get() + data_size, ret.data());
+		return ret;
 	}
