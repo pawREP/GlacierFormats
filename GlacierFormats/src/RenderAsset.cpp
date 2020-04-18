@@ -63,11 +63,11 @@ using namespace GlacierFormats;
 
 		//Material
 		//TODO: This assumes that MATIs are sorted by their id. Not sure if that's really the case.
-		for (const auto& child : root->children()) {
-			auto mati = child->get_if<MATI>();
-			if (mati)
-				materials_.push_back(new Material(mati));
-		}
+		//for (const auto& child : root->children()) {
+		//	auto mati = child->get_if<MATI>();
+		//	if (mati)
+		//		materials_.push_back(new Material(mati));
+		//}
 
 		//Rig
 		for (const auto& child : root->children()) {
