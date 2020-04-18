@@ -49,8 +49,6 @@ namespace GlacierFormats {
 		SProperty inst{ root.name(), root_binder_off, 3, PROPERTY_TYPE::PT_SPROPERTY };
 		bw.write(inst);
 
-		GLACIER_ASSERT_TRUE(header.instance_prop_offset == (bw.tell() - sizeof(SProperty)));
-		GLACIER_ASSERT_TRUE(header.type == (bw.tell() - 2 * sizeof(SProperty)));
 		int header_offset = bw.tell();
 		bw.write(header);
 
