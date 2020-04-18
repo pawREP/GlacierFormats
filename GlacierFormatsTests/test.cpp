@@ -2,6 +2,7 @@
 #include <filesystem>
 #include "GlacierFormats.h"
 #include "Texture.h"
+#include "MatiTests.h"
 
 using namespace GlacierFormats;
 

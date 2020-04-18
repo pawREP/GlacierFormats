@@ -3,87 +3,133 @@
 #include "TypeIDString.h"
 #include <variant>
 #include <unordered_map>
+#include <optional>
 
 namespace GlacierFormats {
 
     class BinaryReader;
+    class Property;
+    class SProperty;
 
-    enum class PROPERTY_TYPE {
-        PT_FLOAT = 0,
-        PT_CSTRING = 1,
-        PT_INT = 2,
-        PT_SPROPERTY = 3,
-    };
-
-    struct SProperty {
-        TypeIDString name;
-        uint32_t data;
-        uint32_t size;
-        PROPERTY_TYPE type;
-    };
-
-    class Property {
-    public:
-        using PropertyVariantType = std::variant<std::string, int, float, std::vector<int>, std::vector<float >>;
-    
+    class SerializationContext {
     private:
-        PropertyVariantType data_variant;
+        std::unordered_map<size_t, uint32_t> records;
+    public:
+        template<typename T>
+        uint32_t get(const T& data) const;
+
+        //Try to insert data record into serialization context. Retruns true if record was inserted.
+        template<typename T>
+        bool insert_if(const T& data, uint32_t offset);
+        
+
+    };
+
+    class Property { 
+    public:
+        using PropertyVariantType = std::variant<std::string, int, float, std::vector<int>, std::vector<float>>;
+
+    private:
+        TypeIDString name_;
+        PropertyVariantType variant;
 
     public:
 
-        Property(BinaryReader& br);
+        Property();
+        Property(BinaryReader& br, const SProperty& sprop);
 
-        std::string name;
+        TypeIDString name() const;
+
+        void serializeData(BinaryWriter& bw, SerializationContext& ctx) const;
+        void serializeMeta(BinaryWriter& bw, SerializationContext& ctx) const;
         
         template<typename T>
-        bool isType() const {
-            return std::holds_alternative<T>(data_variant);
+        bool is() const {
+            return std::holds_alternative<T>(variant);
         }
 
         template<typename T>
         T& get() {
-            return std::get<T>(data_variant);
+            return std::get<T>(variant);
         }
 
         template<typename T>
         const T& get() const {
-            return std::get<T>(data_variant);
+            return std::get<T>(variant);
+        }
+    };
+
+    class PropertyNode;
+
+    class PropertyBinder {
+        TypeIDString name_;
+
+        std::vector<PropertyNode> children;
+        std::unordered_map<TypeIDString, PropertyNode*> property_binder_map;
+
+    public:
+        PropertyBinder(BinaryReader& br, const SProperty& sprop);
+        uint32_t serialize(BinaryWriter& bw, SerializationContext& ctx) const;
+
+        TypeIDString name() const;
+
+        template<typename T>
+        std::vector<const PropertyNode*> gatherNodes() const;
+
+        std::vector<PropertyNode>::const_iterator begin() const;
+        std::vector<PropertyNode>::iterator begin();
+        std::vector<PropertyNode>::const_iterator end() const;
+        std::vector<PropertyNode>::iterator end();
+    };
+
+    class PropertyNode {
+    private:
+        using PropertyNodeVariant = std::variant<std::monostate, PropertyBinder, Property>;
+        PropertyNodeVariant variant;
+
+    public:
+        PropertyNode();
+        PropertyNode(BinaryReader& br);
+
+        uint32_t serialize(BinaryWriter& bw, SerializationContext& ctx) const;
+
+        TypeIDString name() const;
+
+        template<typename T>
+        bool is() const {
+            return std::holds_alternative<T>(variant);
         }
 
+        template<typename T>
+        T& get() {
+            return std::get<T>(variant);
+        }
+
+        template<typename T>
+        const T& get() const {
+            return std::get<T>(variant);
+        }
     };
 
     class MATI : public GlacierResource<MATI> {
     private:
         struct Header {
-            uint32_t name_offset;
-            uint32_t unk0[6];
+            uint32_t type;
+            uint32_t texture_count;
+            uint32_t unk0[5];
             uint32_t instance_prop_offset;
             uint32_t unk1[4]; //Some of this might be padding.
-        };
+        } header;
 
-        struct PropertyBinder {
-            TypeIDString name;
-
-            //TODO: flat_map would be a better fit here.
-            std::unordered_map<TypeIDString, Property> properties;
-
-            bool contains(const char* name) const;
-
-        };
-
-        //std::unique_ptr<char[]> raw_data;
+        std::string type_;
 
     public:
+        PropertyNode root;
+
         MATI(BinaryReader& br, RuntimeId id);
-
         void serialize(BinaryWriter& bw);
-
-        std::string name;
-        std::string tags;
-        std::vector<PropertyBinder> property_binders;
-
-        void print() const; //debug print 
+        
+        const std::string& type() const;
+        std::string materialName() const;
     };
-
-
 }
