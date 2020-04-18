@@ -40,3 +40,19 @@ GTEST_TEST(MATI, Type) {
     ASSERT_TRUE(mati);
     ASSERT_STREQ(mati->type().c_str(), "Standard");
 }
+
+GTEST_TEST(MATI, CompleteRepoReserialize) {
+    const auto& repo = ResourceRepository::instance();
+    const auto mati_ids = repo->getIdsByType("MATI");
+
+    for (const auto& mati_id : mati_ids) {
+        const auto mati = repo->getResource<MATI>(mati_id);
+        ASSERT_TRUE(mati);
+
+        auto original_mati_data = repo->getResource(mati_id);
+        auto reserialized_mati_data = mati->serializeToBuffer();
+
+        ASSERT_EQ(original_mati_data.size(), reserialized_mati_data.size());
+        ASSERT_TRUE((std::memcmp(original_mati_data.data(), reserialized_mati_data.data(), original_mati_data.size()) == 0));
+    }
+}
