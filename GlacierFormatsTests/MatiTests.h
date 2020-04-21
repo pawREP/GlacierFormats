@@ -29,7 +29,7 @@ GTEST_TEST(MATI, materialName) {
 
     const auto mati = repo->getResource<MATI>(mati_id);
     ASSERT_TRUE(mati);
-    ASSERT_STREQ(mati->materialName().c_str(), "travel_case_a.mi");
+    ASSERT_STREQ(mati->instanceName().c_str(), "travel_case_a.mi");
 }
 
 GTEST_TEST(MATI, Type) {
@@ -38,7 +38,7 @@ GTEST_TEST(MATI, Type) {
 
     const auto mati = repo->getResource<MATI>(mati_id);
     ASSERT_TRUE(mati);
-    ASSERT_STREQ(mati->type().c_str(), "Standard");
+    ASSERT_STREQ(mati->materialType().c_str(), "Standard");
 }
 
 GTEST_TEST(MATI, CompleteRepoReserialize) {
