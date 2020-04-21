@@ -387,26 +387,26 @@ std::string CreateMetalRoughMaterial(Document& document, std::string* albedo, st
 constexpr bool USE_SPEC_GLOSS_EXT = false;
 
 //TODO: The material system isn't understood well enough to make this very useful just yet. Avoid.
-std::string CreateMaterial(Document& document, const GlacierFormats::IMaterial* src_material) {
-    //TODO: Externalize this fixed extension and think about the texture situation. 
-    //GLTF doesn't officially support tga and most viewers ignore the textures. Blender thankfully doesn't. 
-    //DDS can be supported via a vendor extension but this extention might 
-    //not be supported in blender and other editors. Further research required... 
-    const std::string ext = ".tga";
-
-    auto albedo_texture_name = src_material->getDiffuseMap()->name() + ext;//TODO: potentially null.
-    auto normal_texture_name = src_material->getNormalMap()->name() + ext;
-    auto specular_texture_name = src_material->getSpecularMap()->name() + ext;
-
-    auto albedo = CreateTexture(document, albedo_texture_name.c_str());
-    auto normal = CreateTexture(document, normal_texture_name.c_str());
-    auto specular = CreateTexture(document, specular_texture_name.c_str());
-
-    if constexpr (USE_SPEC_GLOSS_EXT)
-        return CreateSpecGlossMaterial(document, &albedo, &normal, &specular);
-    else
-        return CreateMetalRoughMaterial(document, &albedo, &normal);
-}
+//std::string CreateMaterial(Document& document, const GlacierFormats::IMaterial* src_material) {
+//    //TODO: Externalize this fixed extension and think about the texture situation. 
+//    //GLTF doesn't officially support tga and most viewers ignore the textures. Blender thankfully doesn't. 
+//    //DDS can be supported via a vendor extension but this extention might 
+//    //not be supported in blender and other editors. Further research required... 
+//    const std::string ext = ".tga";
+//
+//    auto albedo_texture_name = src_material->getDiffuseMap()->name() + ext;//TODO: potentially null.
+//    auto normal_texture_name = src_material->getNormalMap()->name() + ext;
+//    auto specular_texture_name = src_material->getSpecularMap()->name() + ext;
+//
+//    auto albedo = CreateTexture(document, albedo_texture_name.c_str());
+//    auto normal = CreateTexture(document, normal_texture_name.c_str());
+//    auto specular = CreateTexture(document, specular_texture_name.c_str());
+//
+//    if constexpr (USE_SPEC_GLOSS_EXT)
+//        return CreateSpecGlossMaterial(document, &albedo, &normal, &specular);
+//    else
+//        return CreateMetalRoughMaterial(document, &albedo, &normal);
+//}
 
 std::string CreateMesh(Document& document, const GlacierFormats::IMaterial* src_material, const SkinnedMeshPrimitiveContext& ctx) {
     std::string material_id;
