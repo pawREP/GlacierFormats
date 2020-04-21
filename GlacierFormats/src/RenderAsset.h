@@ -21,6 +21,8 @@ namespace GlacierFormats {
 		GlacierRenderAsset(RuntimeId root_prim_id);
 		GlacierRenderAsset(IMesh* mesh);
 
+		void sortMeshes();
+
 		//Interface
 		const std::vector<IMaterial*> materials() const override final;
 		const std::vector<IMesh*> meshes() const override final;

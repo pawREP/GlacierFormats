@@ -4,6 +4,7 @@
 #include "Hash.h"
 #include "Material.h"
 #include <string_view>
+#include <algorithm>
 
 using namespace GlacierFormats;
 
@@ -80,6 +81,14 @@ using namespace GlacierFormats;
 
 	GlacierFormats::GlacierRenderAsset::GlacierRenderAsset(IMesh* mesh) {
 		meshes_.push_back(mesh);
+	}
+
+	void GlacierFormats::GlacierRenderAsset::sortMeshes() {
+		std::sort(meshes_.begin(), meshes_.end(), 
+			[](IMesh*& m0, IMesh* m1) {
+			return m0->name() < m1->name();
+			}
+		);
 	}
 
 	const std::vector<IMaterial*> GlacierRenderAsset::materials() const {
