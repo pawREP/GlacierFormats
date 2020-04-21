@@ -48,11 +48,11 @@ using namespace GlacierFormats;
 		std::stringstream ss;
 		ss << std::hex;
 		ss << std::uppercase;
-		ss << hash;
+		ss << std::setfill('0');
+		ss << "mat_" << std::setw(2) << remnant.material_id;
+		ss << "_lod_" << std::setw(2) << static_cast<int>(remnant.lod_mask);
+		ss << "_" << std::setw(8) << static_cast<int>(hash);
 		return ss.str();
-
-		//std::string extention("_mat_" + std::to_string(remnant.material_id) + "_lod_" + std::to_string(remnant.lod_mask));
-		//return base_name + extention; 
 	}
 
 	[[nodiscard]] int ZRenderPrimitive::materialId() const noexcept
@@ -63,13 +63,6 @@ using namespace GlacierFormats;
 	[[nodiscard]] size_t ZRenderPrimitive::vertexCount() const
 	{
 		return vertex_buffer->size();
-	}
-
-	[[nodiscard]] std::string ZRenderPrimitive::name(RuntimeId prim_id) const noexcept
-	{
-		std::string mesh_name = 
-		mesh_name += "_mat_" + std::to_string(remnant.material_id) + "_lod_" + std::to_string(remnant.lod_mask);
-		return mesh_name;
 	}
 
 	[[nodiscard]] std::vector<float> ZRenderPrimitive::getVertexBuffer() const
