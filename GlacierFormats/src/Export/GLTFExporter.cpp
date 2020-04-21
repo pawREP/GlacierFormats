@@ -481,7 +481,7 @@ void GLTFExporter::operator()(const GlacierFormats::IRenderAsset& model, const s
             ctx.inv_bind_mat_id = CreateRigResources(buffer_builder, model.rig());
 
             Node armature_empty;
-            armature_empty.name = "Armature";
+            armature_empty.name = "A_" + model.meshes()[i]->name();
             armature_empty.children.push_back(joints.front());
             auto armature_empty_id = document.nodes.Append(armature_empty, AppendIdPolicy::GenerateOnEmpty).id;
             scene.nodes.push_back(armature_empty_id);
